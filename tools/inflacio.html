@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora d'Inflació</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    
+    <style>
+        /* Estils específics per a la visualització de pèrdua */
+        .chart-bar-container {
+            height: 35px;
+            width: 100%;
+            background-color: #fab1a0; /* Vermell clar (la part perduda) */
+            border-radius: 15px;
+            overflow: hidden;
+            display: flex;
+            margin-top: 15px;
+            position: relative;
+        }
+        
+        .bar-retained { 
+            height: 100%; 
+            background-color: #0984e3; /* Blau (valor conservat) */
+            transition: width 0.4s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            color: white;
+            font-size: 0.75em;
+            padding-right: 10px;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        /* Afegim una marca per indicar l'inici */
+        .marker-start {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+        
+        .context-text {
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: var(--text-muted);
+            text-align: center;
+            background: #fff;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #dfe6e9;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="top-nav">
+        <a href="../index.html" class="btn-back">Menú Principal</a>
+    </nav>
+
+    <div class="container">
+        <h2>L'Efecte de la Inflació</h2>
+        <p style="text-align:center; color:#636e72; margin-top:-20px; margin-bottom:30px; font-size:0.9em;">
+            Calcula quant valor perdran els teus diners sense invertir.
+        </p>
+
+        <div class="control-group">
+            <label>Diners Actuals: <span id="disp-amount">1.000 €</span></label>
+            <input type="range" id="in-amount" min="100" max="50000" step="100" value="1000">
+        </div>
+
+        <div class="control-group">
+            <label>Inflació Mitjana Anual: <span id="disp-inflation">3.0%</span></label>
+            <input type="range" id="in-inflation" min="0.5" max="15" step="0.1" value="3.0">
+        </div>
+
+        <div class="control-group">
+            <label>Temps (Anys): <span id="disp-years">10 Anys</span></label>
+            <input type="range" id="in-years" min="1" max="40" step="1" value="10">
+        </div>
+
+        <div class="results-box">
+            <div style="text-align:center; font-size:0.9em; color:var(--text-muted);">Valor Real Futur (Poder de Compra)</div>
+            <div class="big-number" id="disp-result" style="color: #2d3436;">0 €</div>
+
+            <div class="chart-bar-container">
+                <div id="bar-retained" class="bar-retained" style="width:100%">Valor real</div>
+                <div class="marker-start"></div>
+            </div>
+
+            <div class="legend" style="display:flex; justify-content:center; gap:20px; font-size:0.8em; margin-top:10px; color:#636e72;">
+                <span><span class="dot" style="background:#0984e3; width:10px; height:10px; display:inline-block; border-radius:50%; margin-right:5px;"></span>Valor Conservat</span>
+                <span><span class="dot" style="background:#fab1a0; width:10px; height:10px; display:inline-block; border-radius:50%; margin-right:5px;"></span>Poder de compra perdut</span>
+            </div>
+
+            <div class="context-text" id="context-msg">
+                ...
+            </div>
+        </div>
+    </div>
+
+<script>
+    // Elements del DOM
+    const els = {
+        amount: document.getElementById('in-amount'),
+        inf: document.getElementById('in-inflation'),
+        years: document.getElementById('in-years'),
+        // Displays
+        dAmount: document.getElementById('disp-amount'),
+        dInf: document.getElementById('disp-inflation'),
+        dYears: document.getElementById('disp-years'),
+        dResult: document.getElementById('disp-result'),
+        // Visuals
+        bar: document.getElementById('bar-retained'),
+        msg: document.getElementById('context-msg')
+    };
+
+    function calculate() {
+        const presentValue = parseFloat(els.amount.value);
+        const inflationRate = parseFloat(els.inf.value) / 100;
+        const years = parseFloat(els.years.value);
+
+        // Actualitzar etiquetes
+        els.dAmount.textContent = presentValue.toLocaleString('ca-ES') + " €";
+        els.dInf.textContent = (inflationRate * 100).toFixed(1) + "%";
+        els.dYears.textContent = years + " Anys";
+
+        // Càlcul del valor futur (poder adquisitiu)
+        // Fórmula: PV / (1 + r)^t
+        const futurePurchasingPower = presentValue / Math.pow(1 + inflationRate, years);
+        
+        // Pèrdua
+        const loss = presentValue - futurePurchasingPower;
+        const percentRetained = (futurePurchasingPower / presentValue) * 100;
+
+        // Mostrar resultat
+        els.dResult.textContent = Math.floor(futurePurchasingPower).toLocaleString('ca-ES') + " €";
+
+        // Actualitzar barra gràfica
+        els.bar.style.width = percentRetained + "%";
+
+        // Missatge contextual dinàmic
+        // Ex: "Els teus 1000€ equivaldran a tenir només 744€ avui."
+        els.msg.innerHTML = `
+            D'aquí a <strong>${years} anys</strong>, els teus ${presentValue.toLocaleString('ca-ES')} € 
+            tindran el poder de compra equivalent a tenir 
+            <strong>${Math.floor(futurePurchasingPower).toLocaleString('ca-ES')} €</strong> avui. 
+            <br>Has "perdut" virtualment ${Math.floor(loss).toLocaleString('ca-ES')} €.
+        `;
+    }
+
+    // Events
+    [els.amount, els.inf, els.years].forEach(input => {
+        input.addEventListener('input', calculate);
+    });
+
+    // Inicialització
+    calculate();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora Préstec Personal / Cotxe</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        /* Estil específic tipus "Rebut" */
+        .receipt-box {
+            background: #fff;
+            border: 1px dashed #b2bec3;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            position: relative;
+        }
+        .receipt-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        .receipt-row.final {
+            color: var(--text-primary);
+            font-weight: 700;
+            font-size: 1.1rem;
+            border-top: 2px solid var(--text-primary);
+            padding-top: 10px;
+            margin-top: 15px;
+        }
+        
+        /* Gràfic circular senzill (CSS Conic Gradient) */
+        .pie-chart-wrapper {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: conic-gradient(var(--accent) 0% 80%, #e74c3c 80% 100%);
+            margin: 0 auto 20px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .pie-inner {
+            width: 90px;
+            height: 90px;
+            background: #f5f5f7;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.8rem;
+            flex-direction: column;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="top-nav">
+        <a href="../index.html" class="btn-back">Menú Principal</a>
+    </nav>
+
+    <div class="container">
+        <h2>Préstec Personal i Cotxe</h2>
+        <p style="text-align:center; color:var(--text-secondary); margin-top:-20px; margin-bottom:30px; font-size:0.9rem;">
+            Calcula la quota real d'un cotxe, reforma o crèdit al consum.
+        </p>
+
+        <div class="results-box">
+            <div class="pie-chart-wrapper" id="chart-pie">
+                <div class="pie-inner">
+                    <span style="color:#e74c3c" id="d-percent-int">0%</span>
+                    <span style="font-size:0.7em; color:#999">Interès</span>
+                </div>
+            </div>
+
+            <div style="text-align:center; font-size:0.9em; color:var(--text-secondary);">Quota Mensual a Pagar</div>
+            <div class="big-number" id="d-monthly">0 €</div>
+
+            <div class="receipt-box">
+                <div class="receipt-row">
+                    <span>Diners Sol·licitats:</span>
+                    <span id="d-principal">0 €</span>
+                </div>
+                <div class="receipt-row">
+                    <span style="color:#e74c3c">Cost dels Interessos:</span>
+                    <span style="color:#e74c3c" id="d-interest">0 €</span>
+                </div>
+                <div class="receipt-row final">
+                    <span>TOTAL REAL A TORNAR:</span>
+                    <span id="d-total">0 €</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label>Import a Demanar: <span id="t-amount">15.000 €</span></label>
+            <input type="range" id="in-amount" min="1000" max="60000" step="500" value="15000">
+        </div>
+
+        <div class="control-group">
+            <label>Interès Anual (TIN): <span id="t-rate">7.5%</span></label>
+            <input type="range" id="in-rate" min="2" max="20" step="0.1" value="7.5">
+            <p style="font-size:0.75rem; color:#b2bec3; margin-top:5px;">*Préstecs cotxe solen ser 6-9%. Targetes >18%.</p>
+        </div>
+
+        <div class="control-group">
+            <label>Durada (Mesos): <span id="t-months">60 mesos (5 anys)</span></label>
+            <input type="range" id="in-months" min="12" max="120" step="6" value="60">
+        </div>
+    </div>
+
+<script>
+    const els = {
+        amount: document.getElementById('in-amount'),
+        rate: document.getElementById('in-rate'),
+        months: document.getElementById('in-months'),
+        // Texts
+        tAmount: document.getElementById('t-amount'),
+        tRate: document.getElementById('t-rate'),
+        tMonths: document.getElementById('t-months'),
+        // Results
+        dMonthly: document.getElementById('d-monthly'),
+        dPrincipal: document.getElementById('d-principal'),
+        dInterest: document.getElementById('d-interest'),
+        dTotal: document.getElementById('d-total'),
+        dPercentInt: document.getElementById('d-percent-int'),
+        pie: document.getElementById('chart-pie')
+    };
+
+    function calculate() {
+        let P = parseFloat(els.amount.value);
+        let annualRate = parseFloat(els.rate.value);
+        let n = parseFloat(els.months.value); // Mesos directament
+
+        // UI Updates
+        els.tAmount.textContent = P.toLocaleString('ca-ES') + " €";
+        els.tRate.textContent = annualRate.toFixed(1) + "%";
+        
+        let years = (n / 12).toFixed(1);
+        // Treure el .0 si és enter
+        if (years.endsWith('.0')) years = years.slice(0, -2);
+        els.tMonths.textContent = `${n} mesos (${years} anys)`;
+
+        // Math: Amortització Francesa (mensual)
+        let r = (annualRate / 100) / 12;
+        
+        let monthlyPayment = 0;
+        if (annualRate === 0) {
+            monthlyPayment = P / n;
+        } else {
+            monthlyPayment = P * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+        }
+
+        let totalPaid = monthlyPayment * n;
+        let totalInterest = totalPaid - P;
+
+        // Outputs
+        els.dMonthly.textContent = Math.floor(monthlyPayment).toLocaleString('ca-ES') + " €";
+        els.dPrincipal.textContent = P.toLocaleString('ca-ES') + " €";
+        els.dInterest.textContent = Math.floor(totalInterest).toLocaleString('ca-ES') + " €";
+        els.dTotal.textContent = Math.floor(totalPaid).toLocaleString('ca-ES') + " €";
+
+        // Chart Update
+        let percentInterest = (totalInterest / totalPaid) * 100;
+        let percentPrincipal = 100 - percentInterest;
+        
+        // Format CSS Conic Gradient: [ColorPrincipal 0% X%, ColorInterès X% 100%]
+        // Nota: el color principal és Blau (#0071e3), interès Vermell (#e74c3c)
+        els.pie.style.background = `conic-gradient(var(--accent) 0% ${percentPrincipal}%, #e74c3c ${percentPrincipal}% 100%)`;
+        
+        els.dPercentInt.textContent = percentInterest.toFixed(0) + "%";
+    }
+
+    // Listeners
+    [els.amount, els.rate, els.months].forEach(e => e.addEventListener('input', calculate));
+    
+    calculate();
+</script>
+</body>
+</html>

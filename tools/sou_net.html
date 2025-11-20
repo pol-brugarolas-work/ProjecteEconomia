@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora Sou Net</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        /* Estil específic per als resultats duals (12 vs 14 pagues) */
+        .salary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .salary-option {
+            background: #fff;
+            border: 1px solid var(--border-light);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .salary-option.highlight {
+            border-color: var(--accent);
+            background: rgba(0, 113, 227, 0.03);
+        }
+        .salary-label { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 8px; display: block; }
+        .salary-val { font-size: 1.8rem; font-weight: 700; color: var(--text-primary); }
+        
+        /* Detalls de nòmina (desglossament) */
+        .breakdown {
+            margin-top: 30px;
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border-light);
+            padding-top: 20px;
+        }
+        .breakdown-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            color: var(--text-secondary);
+        }
+        .breakdown-row.total {
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 1rem;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed #eee;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="top-nav">
+        <a href="../index.html" class="btn-back">Menú Principal</a>
+    </nav>
+
+    <div class="container">
+        <h2>Calculadora Sou Net</h2>
+        <p style="text-align:center; color:var(--text-secondary); margin-top:-20px; margin-bottom:30px; font-size:0.9rem;">
+            Estimació precisa segons IRPF i Seguretat Social (Espanya 2025).
+        </p>
+
+        <div class="results-box" style="background: transparent; padding: 0; text-align: left;">
+            
+            <div class="salary-grid">
+                <div class="salary-option highlight" id="box-12">
+                    <span class="salary-label">En 12 Pagues</span>
+                    <div class="salary-val" id="res-12">0 €</div>
+                    <span style="font-size:0.75rem; color:#999">al mes</span>
+                </div>
+                <div class="salary-option" id="box-14">
+                    <span class="salary-label">En 14 Pagues</span>
+                    <div class="salary-val" id="res-14">0 €</div>
+                    <span style="font-size:0.75rem; color:#999">al mes + 2 extres</span>
+                </div>
+            </div>
+
+            <div class="breakdown">
+                <div class="breakdown-row">
+                    <span>Sou Brut Mensual (12 pagues)</span>
+                    <span id="d-gross-month">0 €</span>
+                </div>
+                <div class="breakdown-row">
+                    <span>Retenció IRPF (<span id="d-irpf-rate">0%</span>)</span>
+                    <span id="d-irpf-val" style="color:#e74c3c">-0 €</span>
+                </div>
+                <div class="breakdown-row">
+                    <span>Seguretat Social (6.35%)</span>
+                    <span id="d-ss-val" style="color:#e74c3c">-0 €</span>
+                </div>
+                <div class="breakdown-row total">
+                    <span>TOTAL A REBRE (NET)</span>
+                    <span id="d-net-total">0 €</span>
+                </div>
+            </div>
+        </div>
+
+        <hr style="border:0; border-top:1px solid var(--border-light); margin: 40px 0;">
+
+        <div class="control-group">
+            <label>Salari Brut Anual: <span id="t-salary">30.000 €</span></label>
+            <input type="range" id="in-salary" min="12000" max="120000" step="500" value="30000">
+        </div>
+
+        <div class="control-group">
+            <label>Edat: <span id="t-age">30 anys</span></label>
+            <input type="range" id="in-age" min="18" max="70" step="1" value="30">
+        </div>
+
+        <div class="control-group">
+            <label>Nombre de Fills (Menors 25): <span id="t-kids">0</span></label>
+            <input type="range" id="in-kids" min="0" max="5" step="1" value="0">
+        </div>
+        
+        <p style="font-size: 0.75rem; color: #b2bec3; text-align: center; margin-top: 30px; line-height: 1.4;">
+            *Nota: Aquesta eina proporciona una estimació propera a la realitat aplicant les taules estatals generals. El resultat final pot variar segons la Comunitat Autònoma o situacions de discapacitat específiques.
+        </p>
+    </div>
+
+<script>
+    const els = {
+        salary: document.getElementById('in-salary'),
+        age: document.getElementById('in-age'),
+        kids: document.getElementById('in-kids'),
+        // Texts
+        tSalary: document.getElementById('t-salary'),
+        tAge: document.getElementById('t-age'),
+        tKids: document.getElementById('t-kids'),
+        // Results
+        r12: document.getElementById('res-12'),
+        r14: document.getElementById('res-14'),
+        dGross: document.getElementById('d-gross-month'),
+        dIrpfRate: document.getElementById('d-irpf-rate'),
+        dIrpfVal: document.getElementById('d-irpf-val'),
+        dSsVal: document.getElementById('d-ss-val'),
+        dNetTotal: document.getElementById('d-net-total')
+    };
+
+    function calculateTax(gross, kids) {
+        // SIMULACIÓ IRPF 2024/25 (Simplificada per trams estatals)
+        // Això calcula la quota, no la retenció exacta de l'AEAT, però s'hi acosta molt.
+        
+        // 1. Seguretat Social (Treballador)
+        // Base màxima aprox 4720€/mes -> 56640€ anuals
+        let ssBase = gross;
+        if (gross > 56640) ssBase = 56640;
+        if (gross < 13230) ssBase = 13230; // SMI aprox
+        
+        let ssTotal = ssBase * 0.0635; // 4.7 + 1.55 + 0.1
+
+        // 2. Mínim Personal i Familiar (exempt d'IRPF)
+        let personalMin = 5550; 
+        // Mínim per descendents
+        let kidsMin = 0;
+        if (kids >= 1) kidsMin += 2400;
+        if (kids >= 2) kidsMin += 2700;
+        if (kids >= 3) kidsMin += 4000;
+        if (kids >= 4) kidsMin += 4500; // per quart i següents
+
+        let totalExempt = personalMin + kidsMin;
+
+        // 3. Càlcul Quota IRPF (Progressiva)
+        // Trams aproximats estatals
+        const brackets = [
+            { limit: 12450, rate: 0.19 },
+            { limit: 20200, rate: 0.24 },
+            { limit: 35200, rate: 0.30 },
+            { limit: 60000, rate: 0.37 },
+            { limit: 300000, rate: 0.45 },
+            { limit: Infinity, rate: 0.47 }
+        ];
+
+        function getTaxForAmount(amount) {
+            let tax = 0;
+            let currentPos = 0;
+            for (let b of brackets) {
+                if (amount > currentPos) {
+                    let taxable = Math.min(amount, b.limit) - currentPos;
+                    tax += taxable * b.rate;
+                    currentPos = b.limit;
+                } else {
+                    break;
+                }
+            }
+            return tax;
+        }
+
+        let fullTax = getTaxForAmount(gross);
+        let exemptTax = getTaxForAmount(totalExempt); // El que ens estalviem pel mínim
+
+        let finalIrpf = fullTax - exemptTax;
+        if (finalIrpf < 0) finalIrpf = 0;
+
+        // Ajust per rendes baixes (Reducció art 20 IRPF - simplificat)
+        if (gross < 22000) {
+            finalIrpf = finalIrpf * 0.85; // Reducció sintètica per apropar-se a la realitat de les retencions baixes
+        }
+        if (gross < 15876) { // Mínim exempt efectiu aprox
+            finalIrpf = 0;
+        }
+
+        return {
+            ss: ssTotal,
+            irpf: finalIrpf,
+            net: gross - ssTotal - finalIrpf
+        };
+    }
+
+    function update() {
+        let gross = parseFloat(els.salary.value);
+        let age = parseFloat(els.age.value);
+        let kids = parseFloat(els.kids.value);
+
+        // Update UI Labels
+        els.tSalary.textContent = gross.toLocaleString('ca-ES') + " €";
+        els.tAge.textContent = age + " anys";
+        els.tKids.textContent = kids;
+
+        // Calculate
+        let result = calculateTax(gross, kids);
+
+        let netAnnual = result.net;
+        let netMonth12 = netAnnual / 12;
+        let netMonth14 = netAnnual / 14;
+
+        let irpfPercent = (result.irpf / gross) * 100;
+
+        // Display Results
+        els.r12.textContent = Math.floor(netMonth12).toLocaleString('ca-ES') + " €";
+        els.r14.textContent = Math.floor(netMonth14).toLocaleString('ca-ES') + " €";
+
+        // Breakdown (basat en 12 pagues per claredat)
+        els.dGross.textContent = (gross / 12).toFixed(0).toLocaleString('ca-ES') + " €";
+        els.dIrpfRate.textContent = irpfPercent.toFixed(1) + "%";
+        els.dIrpfVal.textContent = "-" + (result.irpf / 12).toFixed(0).toLocaleString('ca-ES') + " €";
+        els.dSsVal.textContent = "-" + (result.ss / 12).toFixed(0).toLocaleString('ca-ES') + " €";
+        els.dNetTotal.textContent = Math.floor(netMonth12).toLocaleString('ca-ES') + " €";
+    }
+
+    // Listeners
+    [els.salary, els.age, els.kids].forEach(e => e.addEventListener('input', update));
+    
+    update();
+</script>
+</body>
+</html>

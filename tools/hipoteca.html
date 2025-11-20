@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador d'Hipoteca</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        /* Estils específics per a aquesta eina */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .summary-item {
+            background: #fff;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #eee;
+        }
+        .summary-label { font-size: 0.8em; color: var(--text-muted); display: block; margin-bottom: 5px;}
+        .summary-val { font-weight: 700; color: var(--text-main); }
+
+        /* Barra de proporció */
+        .mortgage-bar {
+            height: 12px;
+            width: 100%;
+            background: #eee;
+            border-radius: 6px;
+            margin-top: 25px;
+            overflow: hidden;
+            display: flex;
+        }
+        .seg-loan { background-color: #3498db; height: 100%; } /* El préstec */
+        .seg-interest { background-color: #e74c3c; height: 100%; } /* Els interessos "cremats" */
+    </style>
+</head>
+<body>
+
+    <nav class="top-nav">
+        <a href="../index.html" class="btn-back">Menú Principal</a>
+    </nav>
+
+    <div class="container">
+        <h2>Simulador d'Hipoteca</h2>
+        
+        <div class="control-group">
+            <label>Preu de l'Habitatge: <span id="d-price">200.000 €</span></label>
+            <input type="range" id="in-price" min="50000" max="800000" step="1000" value="200000">
+        </div>
+
+        <div class="control-group">
+            <label>Entrada Inicial (Estalvis): <span id="d-down">40.000 €</span></label>
+            <input type="range" id="in-down" min="0" max="200000" step="1000" value="40000">
+        </div>
+
+        <div class="control-group">
+            <label>Interès Anual (%): <span id="d-rate">3.5%</span></label>
+            <input type="range" id="in-rate" min="0.1" max="10" step="0.1" value="3.5">
+        </div>
+
+        <div class="control-group">
+            <label>Durada (Anys): <span id="d-years">25 Anys</span></label>
+            <input type="range" id="in-years" min="5" max="40" step="1" value="25">
+        </div>
+
+        <div class="results-box">
+            <div style="text-align:center; font-size:0.9em; color:var(--text-muted);">Quota Mensual Estimada</div>
+            <div class="big-number" id="d-monthly">0 €</div>
+
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <span class="summary-label">Import del Préstec</span>
+                    <span class="summary-val" id="d-loan">0 €</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Total Interessos Pagats</span>
+                    <span class="summary-val" id="d-total-interest" style="color:#e74c3c">0 €</span>
+                </div>
+            </div>
+
+            <div class="mortgage-bar">
+                <div id="bar-loan" class="seg-loan" style="width:70%"></div>
+                <div id="bar-interest" class="seg-interest" style="width:30%"></div>
+            </div>
+            
+            <div class="legend" style="display:flex; justify-content:center; gap:20px; font-size:0.8em; margin-top:10px; color:#636e72;">
+                <span><span class="dot" style="background:#3498db; width:8px; height:8px; display:inline-block; border-radius:50%; margin-right:5px;"></span>Capital Retornat</span>
+                <span><span class="dot" style="background:#e74c3c; width:8px; height:8px; display:inline-block; border-radius:50%; margin-right:5px;"></span>Cost Interessos</span>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const els = {
+        price: document.getElementById('in-price'),
+        down: document.getElementById('in-down'),
+        rate: document.getElementById('in-rate'),
+        years: document.getElementById('in-years'),
+        // Displays
+        dp: document.getElementById('d-price'),
+        dd: document.getElementById('d-down'),
+        dr: document.getElementById('d-rate'),
+        dy: document.getElementById('d-years'),
+        // Results
+        dm: document.getElementById('d-monthly'),
+        dl: document.getElementById('d-loan'),
+        dti: document.getElementById('d-total-interest'),
+        // Bars
+        bl: document.getElementById('bar-loan'),
+        bi: document.getElementById('bar-interest')
+    };
+
+    function calculate() {
+        // 1. Valors
+        let price = parseFloat(els.price.value);
+        let down = parseFloat(els.down.value);
+        
+        // Lògica de seguretat: L'entrada no pot ser major que el preu
+        if (down > price) {
+            down = price; 
+            // Opcional: ajustar el slider visualment, però per simplicitat només ajustem el càlcul
+        }
+
+        let loan = price - down; // El que demanes al banc
+        let annualRate = parseFloat(els.rate.value);
+        let years = parseFloat(els.years.value);
+
+        // Actualitzar textos Inputs
+        els.dp.textContent = price.toLocaleString('ca-ES') + " €";
+        els.dd.textContent = down.toLocaleString('ca-ES') + " €";
+        els.dr.textContent = annualRate.toFixed(1) + "%";
+        els.dy.textContent = years + " Anys";
+
+        // 2. Càlcul Hipoteca (Mètode Francès)
+        // M = P * [ r(1+r)^n ] / [ (1+r)^n – 1 ]
+        let monthlyRate = (annualRate / 100) / 12;
+        let totalMonths = years * 12;
+        
+        let monthlyPayment = 0;
+
+        if (loan <= 0) {
+            monthlyPayment = 0;
+        } else if (annualRate === 0) {
+            monthlyPayment = loan / totalMonths;
+        } else {
+            monthlyPayment = loan * (monthlyRate * Math.pow(1 + monthlyRate, totalMonths)) / (Math.pow(1 + monthlyRate, totalMonths) - 1);
+        }
+
+        let totalPaid = monthlyPayment * totalMonths;
+        let totalInterest = totalPaid - loan;
+
+        // 3. Resultats a pantalla
+        els.dm.textContent = Math.floor(monthlyPayment).toLocaleString('ca-ES') + " €/mes";
+        els.dl.textContent = loan.toLocaleString('ca-ES') + " €";
+        els.dti.textContent = Math.floor(totalInterest).toLocaleString('ca-ES') + " €";
+
+        // 4. Barres visuals (Cost Total = Préstec + Interessos)
+        let totalCost = loan + totalInterest;
+        if (totalCost <= 0) totalCost = 1;
+
+        let loanPercent = (loan / totalCost) * 100;
+        let interestPercent = (totalInterest / totalCost) * 100;
+
+        els.bl.style.width = loanPercent + "%";
+        els.bi.style.width = interestPercent + "%";
+    }
+
+    // Listeners
+    [els.price, els.down, els.rate, els.years].forEach(e => e.addEventListener('input', calculate));
+    
+    calculate();
+</script>
+</body>
+</html>

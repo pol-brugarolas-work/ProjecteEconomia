@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora FIRE (Llibertat Financera)</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        /* Estil específic per destacar el "Nombre Màgic" */
+        .fire-number-box {
+            background: #2d3436;
+            color: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        .fire-label { text-transform: uppercase; letter-spacing: 1px; font-size: 0.8em; opacity: 0.8; }
+        .fire-val { font-size: 2em; font-weight: 700; color: #f1c40f; /* Color Or */ margin-top: 5px; }
+
+        /* Barra de progrés cap a la llibertat */
+        .progress-track {
+            height: 20px;
+            background: #dfe6e9;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #f1c40f, #f39c12);
+            width: 0%;
+            transition: width 1s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="top-nav">
+        <a href="../index.html" class="btn-back">Menú Principal</a>
+    </nav>
+
+    <div class="container">
+        <h2>Llibertat Financera (FIRE)</h2>
+        <p style="text-align:center; color:#636e72; margin-top:-20px; margin-bottom:30px; font-size:0.9em;">
+            Basat en la Regla del 4%: Quant necessites per viure de rendes?
+        </p>
+        
+        <div class="fire-number-box">
+            <span class="fire-label">El teu número de llibertat</span>
+            <div class="fire-val" id="d-target">0 €</div>
+            <div style="font-size: 0.9em; margin-top: 10px; opacity: 0.9;">
+                Assolible en <span id="d-years" style="color:#f1c40f; font-weight:bold">-- anys</span>
+            </div>
+        </div>
+
+        <div class="results-box" style="margin-top: 0; background: transparent; padding: 0;">
+             <div style="display:flex; justify-content:space-between; font-size:0.8em; color:var(--text-muted); margin-bottom:5px;">
+                <span>Progrés Actual</span>
+                <span id="d-percent">0%</span>
+            </div>
+            <div class="progress-track">
+                <div id="bar-progress" class="progress-fill"></div>
+            </div>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
+
+        <div class="control-group">
+            <label>Despeses Mensuals (Per viure): <span id="t-expenses">2.000 €</span></label>
+            <input type="range" id="in-expenses" min="500" max="10000" step="50" value="2000">
+        </div>
+
+        <div class="control-group">
+            <label>Estalvis Actuals (Ja invertits): <span id="t-current">10.000 €</span></label>
+            <input type="range" id="in-current" min="0" max="500000" step="1000" value="10000">
+        </div>
+
+        <div class="control-group">
+            <label>Inversió Mensual: <span id="t-monthly">500 €</span></label>
+            <input type="range" id="in-monthly" min="0" max="5000" step="50" value="500">
+        </div>
+
+        <div class="control-group">
+            <label>Rendiment Anual Inversions: <span id="t-rate">7.0%</span></label>
+            <input type="range" id="in-rate" min="1" max="12" step="0.1" value="7.0">
+        </div>
+        
+        <p style="font-size: 0.8em; color: #b2bec3; text-align: center; margin-top: 30px;">
+            *Càlcul estimat assumint una taxa de retirada segura del 4% (Regla de Bengen). No és assessorament financer.
+        </p>
+    </div>
+
+<script>
+    const els = {
+        exp: document.getElementById('in-expenses'),
+        curr: document.getElementById('in-current'),
+        mon: document.getElementById('in-monthly'),
+        rate: document.getElementById('in-rate'),
+        // Text displays
+        tExp: document.getElementById('t-expenses'),
+        tCurr: document.getElementById('t-current'),
+        tMon: document.getElementById('t-monthly'),
+        tRate: document.getElementById('t-rate'),
+        // Results
+        dTarget: document.getElementById('d-target'),
+        dYears: document.getElementById('d-years'),
+        dPercent: document.getElementById('d-percent'),
+        bar: document.getElementById('bar-progress')
+    };
+
+    function calculate() {
+        // 1. Get Values
+        let expenses = parseFloat(els.exp.value);
+        let currentSavings = parseFloat(els.curr.value);
+        let monthlyContribution = parseFloat(els.mon.value);
+        let annualRate = parseFloat(els.rate.value) / 100;
+
+        // Update labels
+        els.tExp.textContent = expenses.toLocaleString('ca-ES') + " €";
+        els.tCurr.textContent = currentSavings.toLocaleString('ca-ES') + " €";
+        els.tMon.textContent = monthlyContribution.toLocaleString('ca-ES') + " €";
+        els.tRate.textContent = (annualRate * 100).toFixed(1) + "%";
+
+        // 2. Calculate FIRE Number (Regla del 4% -> Despeses Anuals * 25)
+        let annualExpenses = expenses * 12;
+        let fireNumber = annualExpenses * 25;
+
+        els.dTarget.textContent = fireNumber.toLocaleString('ca-ES') + " €";
+
+        // 3. Calculate Progress
+        let progress = (currentSavings / fireNumber) * 100;
+        if (progress > 100) progress = 100;
+        
+        els.dPercent.textContent = progress.toFixed(1) + "%";
+        els.bar.style.width = progress + "%";
+
+        // 4. Calculate Time to reach goal (Iterative approach for accuracy)
+        // FV = PV * (1+r)^t + PMT * ...
+        // We simply loop year by year until balance >= fireNumber
+        
+        if (currentSavings >= fireNumber) {
+            els.dYears.textContent = "JA HO TENS!";
+            return;
+        }
+        
+        if (monthlyContribution <= 0 && currentSavings <= 0) {
+            els.dYears.textContent = "Mai (sense estalvi)";
+            return;
+        }
+
+        let balance = currentSavings;
+        let years = 0;
+        let maxYears = 100; // Safety break
+
+        // Simplificació: Càlcul mensual per ser més precís amb l'aportació
+        let monthlyRate = annualRate / 12;
+        let months = 0;
+
+        while (balance < fireNumber && years < maxYears) {
+            // Afegim rendiment al saldo existent
+            balance += balance * monthlyRate;
+            // Afegim nova contribució
+            balance += monthlyContribution;
+            
+            months++;
+            if (months % 12 === 0) years++;
+        }
+
+        if (years >= maxYears) {
+            els.dYears.textContent = "+100 anys";
+        } else {
+            let yearsDecimal = (months / 12).toFixed(1);
+            els.dYears.textContent = yearsDecimal + " anys";
+        }
+    }
+
+    // Listeners
+    [els.exp, els.curr, els.mon, els.rate].forEach(e => e.addEventListener('input', calculate));
+    
+    calculate();
+</script>
+</body>
+</html>

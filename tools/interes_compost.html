@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora d'Interès Compost</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        .chart-bar-container {
+            height: 30px;
+            width: 100%;
+            background-color: #dfe6e9;
+            border-radius: 15px;
+            overflow: hidden;
+            display: flex;
+            margin-top: 10px;
+        }
+        .bar-segment { height: 100%; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .bg-principal { background-color: #bdc3c7; }
+        .bg-interest { background-color: var(--success); }
+        
+        .legend {
+            display: flex; justify-content: center; gap: 20px; 
+            font-size: 0.85em; margin-top: 15px; color: var(--text-muted);
+        }
+        .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+    </style>
+</head>
+<body>
+
+    <nav class="top-nav">
+        <a href="../index.html" class="btn-back">Menú Principal</a>
+    </nav>
+
+    <div class="container">
+        <h2>Interès Compost</h2>
+
+        <div class="control-group">
+            <label>Dipòsit Inicial: <span id="disp-principal">1.000 €</span></label>
+            <input type="range" id="in-principal" min="0" max="100000" step="100" value="1000">
+        </div>
+
+        <div class="control-group">
+            <label>Aportació Mensual: <span id="disp-monthly">100 €</span></label>
+            <input type="range" id="in-monthly" min="0" max="3000" step="50" value="100">
+        </div>
+
+        <div class="control-group">
+            <label>Taxa Anual (%): <span id="disp-rate">5.0%</span></label>
+            <input type="range" id="in-rate" min="0" max="15" step="0.1" value="5.0">
+        </div>
+
+        <div class="control-group">
+            <label>Temps (Anys): <span id="disp-years">10 Anys</span></label>
+            <input type="range" id="in-years" min="1" max="40" step="1" value="10">
+        </div>
+
+        <div class="results-box">
+            <div style="text-align:center; font-size:0.9em; color:var(--text-muted);">Saldo Total Estimat</div>
+            <div class="big-number" id="disp-total">0 €</div>
+
+            <div class="chart-bar-container">
+                <div id="bar-principal" class="bar-segment bg-principal" style="width:50%"></div>
+                <div id="bar-interest" class="bar-segment bg-interest" style="width:50%"></div>
+            </div>
+
+            <div class="legend">
+                <span><span class="dot bg-principal"></span>Diners posats per tu</span>
+                <span><span class="dot bg-interest"></span>Generat pels interessos</span>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // Lògica de càlcul
+    const els = {
+        p: document.getElementById('in-principal'),
+        m: document.getElementById('in-monthly'),
+        r: document.getElementById('in-rate'),
+        t: document.getElementById('in-years'),
+        // Displays
+        dp: document.getElementById('disp-principal'),
+        dm: document.getElementById('disp-monthly'),
+        dr: document.getElementById('disp-rate'),
+        dt: document.getElementById('disp-years'),
+        dTotal: document.getElementById('disp-total'),
+        // Bars
+        barP: document.getElementById('bar-principal'),
+        barI: document.getElementById('bar-interest')
+    };
+
+    function update() {
+        const P = parseFloat(els.p.value);
+        const M = parseFloat(els.m.value);
+        const R = parseFloat(els.r.value) / 100;
+        const T = parseFloat(els.t.value);
+
+        // Update texts
+        els.dp.textContent = P.toLocaleString('ca-ES') + " €";
+        els.dm.textContent = M.toLocaleString('ca-ES') + " €";
+        els.dr.textContent = (R*100).toFixed(1) + "%";
+        els.dt.textContent = T + " Anys";
+
+        // Math: FV = P(1+r/n)^(nt) + PMT * ...
+        const n = 12; 
+        const totalMonths = T * 12;
+        const rateMonth = R / 12;
+
+        let fv = P * Math.pow(1 + rateMonth, totalMonths);
+        if (rateMonth > 0) {
+            fv += M * (Math.pow(1 + rateMonth, totalMonths) - 1) / rateMonth;
+        } else {
+            fv += M * totalMonths;
+        }
+
+        const totalInvested = P + (M * totalMonths);
+        const totalInterest = fv - totalInvested;
+
+        els.dTotal.textContent = Math.floor(fv).toLocaleString('ca-ES') + " €";
+
+        // Update Bar widths
+        let totalW = fv > 0 ? fv : 1;
+        const pWidth = (totalInvested / totalW) * 100;
+        const iWidth = (totalInterest / totalW) * 100;
+        
+        els.barP.style.width = pWidth + "%";
+        els.barI.style.width = iWidth + "%";
+    }
+
+    // Listeners
+    [els.p, els.m, els.r, els.t].forEach(e => e.addEventListener('input', update));
+    update();
+</script>
+
+</body>
+</html>

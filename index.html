@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eines Financeres en Català</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <div class="header-container">
+        <span class="brand-eyebrow">Eines Personals v1.0</span>
+        <h1 class="main-title">Finances, <br>simplificades.</h1>
+        <p class="sub-title">
+            Calculadores precises, privades i en català per prendre decisions intel·ligents amb els teus diners.
+        </p>
+
+        <div class="search-wrapper">
+            <span class="search-icon-placeholder">🔍</span>
+            <input type="text" class="search-input" id="search-tools" placeholder="Cerca una eina (ex: hipoteca, inflació...)">
+        </div>
+    </div>
+
+    <div class="dashboard-grid" id="tools-grid">
+        
+        <a href="tools/sou_net.html" class="tool-card">
+            <div class="tool-icon">💶</div>
+            <div>
+                <h3 class="tool-title">Calculadora Sou Net</h3>
+                <p class="tool-desc">Quant cobraràs realment cada mes?</p>
+            </div>
+        </a>
+
+        <a href="tools/hipoteca.html" class="tool-card">
+            <div class="tool-icon">🏠</div>
+            <div>
+                <h3 class="tool-title">Simulador Hipoteca</h3>
+                <p class="tool-desc">Quota mensual i amortització.</p>
+            </div>
+        </a>
+
+        <a href="tools/prestec_personal.html" class="tool-card">
+            <div class="tool-icon">🚗</div>
+            <div>
+                <h3 class="tool-title">Préstec Cotxe/Personal</h3>
+                <p class="tool-desc">Calcula la quota i interessos reals.</p>
+            </div>
+        </a>
+
+        <a href="tools/lloguer_vs_compra.html" class="tool-card">
+            <div class="tool-icon">⚖️</div>
+            <div>
+                <h3 class="tool-title">Lloguer vs Compra</h3>
+                <p class="tool-desc">Anàlisi de cost d'oportunitat.</p>
+            </div>
+        </a>
+
+        <a href="tools/interes_compost.html" class="tool-card">
+            <div class="tool-icon">📈</div>
+            <div>
+                <h3 class="tool-title">Interès Compost</h3>
+                <p class="tool-desc">Projecció de creixement exponencial.</p>
+            </div>
+        </a>
+
+        <a href="tools/fons_emergencia.html" class="tool-card">
+            <div class="tool-icon">🆘</div>
+            <div>
+                <h3 class="tool-title">Fons d'Emergència</h3>
+                <p class="tool-desc">El teu matalàs de seguretat.</p>
+            </div>
+        </a>
+
+        <a href="tools/inflacio.html" class="tool-card">
+            <div class="tool-icon">💸</div>
+            <div>
+                <h3 class="tool-title">Calculadora d'Inflació</h3>
+                <p class="tool-desc">Pèrdua de poder adquisitiu.</p>
+            </div>
+        </a>
+
+        <a href="tools/llibertat_financera.html" class="tool-card">
+            <div class="tool-icon">🔥</div>
+            <div>
+                <h3 class="tool-title">Calculadora FIRE</h3>
+                <p class="tool-desc">Quan et podràs jubilar?</p>
+            </div>
+        </a>
+
+    </div>
+
+    <footer>
+        <div style="margin-bottom: 20px;">
+            <a href="mailto:hola@latewaweb.cat?subject=Suggeriment" 
+               style="border: 1px solid rgba(0,0,0,0.1); padding: 6px 14px; border-radius: 20px; transition: background 0.2s;">
+               💡 Proposar millora
+            </a>
+        </div>
+        <p>&copy; 2025 Projecte Finances. Fet amb ❤️ en Català.</p>
+    </footer>
+
+    <script>
+        document.getElementById('search-tools').addEventListener('keyup', function(e) {
+            const term = e.target.value.toLowerCase();
+            const cards = document.querySelectorAll('.tool-card');
+            
+            cards.forEach(card => {
+                const title = card.querySelector('.tool-title').textContent.toLowerCase();
+                const desc = card.querySelector('.tool-desc').textContent.toLowerCase();
+                if(title.includes(term) || desc.includes(term)) {
+                    card.style.display = "flex";
+                } else {
+                    card.style.display = "none";
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>

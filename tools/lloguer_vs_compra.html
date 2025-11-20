@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lloguer vs Compra</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        /* Estils per la comparació "Versus" */
+        .vs-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            gap: 10px;
+        }
+        .vs-box {
+            flex: 1;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        /* Colors semàntics */
+        .box-rent { background-color: #e3f2fd; border: 2px solid transparent; }
+        .box-buy { background-color: #e8f5e9; border: 2px solid transparent; }
+        
+        /* Classe per destacar el guanyador */
+        .winner { 
+            border-color: #f1c40f; 
+            transform: scale(1.05); 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 2;
+        }
+        .winner::after {
+            content: "🏆 MILLOR OPCIÓ";
+            display: block;
+            font-size: 0.7em;
+            font-weight: bold;
+            color: #f39c12;
+            margin-top: 5px;
+        }
+
+        .net-worth-label { font-size: 0.8em; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;}
+        .net-worth-val { font-size: 1.6em; font-weight: 800; margin-top: 5px; }
+
+        /* Diferència final */
+        .verdict-box {
+            background: #2d3436;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 0.95em;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="top-nav">
+        <a href="../index.html" class="btn-back">Menú Principal</a>
+    </nav>
+
+    <div class="container">
+        <h2>Lloguer o Compra?</h2>
+        <p style="text-align:center; color:#636e72; margin-top:-20px; margin-bottom:30px; font-size:0.9em;">
+            Anàlisi financera incloent el cost d'oportunitat d'invertir l'entrada.
+        </p>
+
+        <div class="vs-container">
+            <div id="box-rent" class="vs-box box-rent">
+                <span class="net-worth-label">Patrimoni si Llogues</span>
+                <div class="net-worth-val" id="d-nw-rent">0 €</div>
+                <div style="font-size:0.75em; color:#7f8c8d; margin-top:5px;">(Inversions acumulades)</div>
+            </div>
+
+            <div id="box-buy" class="vs-box box-buy">
+                <span class="net-worth-label">Patrimoni si Compres</span>
+                <div class="net-worth-val" id="d-nw-buy">0 €</div>
+                <div style="font-size:0.75em; color:#7f8c8d; margin-top:5px;">(Valor pis - Deute)</div>
+            </div>
+        </div>
+
+        <div class="verdict-box" id="d-verdict">
+            Calculant...
+        </div>
+
+        <div class="control-group">
+            <label>Preu del Pis (Compra): <span id="t-price">250.000 €</span></label>
+            <input type="range" id="in-price" min="50000" max="800000" step="5000" value="250000">
+        </div>
+
+        <div class="control-group">
+            <label>Preu del Lloguer (Mensual): <span id="t-rent">1.000 €</span></label>
+            <input type="range" id="in-rent" min="300" max="3000" step="50" value="1000">
+        </div>
+
+        <div class="control-group">
+            <label>Temps de l'estudi (Anys): <span id="t-years">15 Anys</span></label>
+            <input type="range" id="in-years" min="2" max="30" step="1" value="15">
+        </div>
+
+        <hr style="margin: 30px 0; border:0; border-top:1px solid #eee;">
+        <p style="font-size:0.8em; font-weight:bold; color:#b2bec3; text-align:center; margin-bottom:20px;">VARIABLES DE MERCAT</p>
+
+        <div class="control-group">
+            <label>Interès Hipoteca (%): <span id="t-mortgage">3.5%</span></label>
+            <input type="range" id="in-mortgage" min="1" max="8" step="0.1" value="3.5">
+        </div>
+
+        <div class="control-group">
+            <label>Retorn Inversió (Borsa/Fons) (%): <span id="t-invest">6.0%</span></label>
+            <input type="range" id="in-invest" min="0" max="10" step="0.1" value="6.0">
+        </div>
+        
+        <p style="font-size: 0.75em; color: #b2bec3; margin-top: 30px; text-align: justify;">
+            *Supòsits automàtics: Entrada del 20% + 10% Despeses Compra (ITP/Notaria). Manteniment pis propi: 1%/any. Revalorització pis: 2%/any. Puja lloguer: 2%/any.
+        </p>
+    </div>
+
+<script>
+    // Elements
+    const els = {
+        price: document.getElementById('in-price'),
+        rent: document.getElementById('in-rent'),
+        years: document.getElementById('in-years'),
+        mortgageRate: document.getElementById('in-mortgage'),
+        investRate: document.getElementById('in-invest'),
+        // Texts
+        tPrice: document.getElementById('t-price'),
+        tRent: document.getElementById('t-rent'),
+        tYears: document.getElementById('t-years'),
+        tMortgage: document.getElementById('t-mortgage'),
+        tInvest: document.getElementById('t-invest'),
+        // Results
+        nwRent: document.getElementById('d-nw-rent'),
+        nwBuy: document.getElementById('d-nw-buy'),
+        verdict: document.getElementById('d-verdict'),
+        boxRent: document.getElementById('box-rent'),
+        boxBuy: document.getElementById('box-buy')
+    };
+
+    function calculate() {
+        // 1. Inputs
+        let homePrice = parseFloat(els.price.value);
+        let monthlyRent = parseFloat(els.rent.value);
+        let years = parseFloat(els.years.value);
+        let mortgageRate = parseFloat(els.mortgageRate.value) / 100;
+        let investRate = parseFloat(els.investRate.value) / 100;
+
+        // Constants ocultes (per simplificar UI)
+        const downPaymentPercent = 0.20; // 20% entrada
+        const closingCostsPercent = 0.10; // 10% impostos i despeses
+        const maintenanceRate = 0.01; // 1% valor pis anual en reparacions/ibi
+        const homeAppreciation = 0.02; // Pis puja 2% any
+        const rentInflation = 0.02; // Lloguer puja 2% any
+
+        // Update UI Texts
+        els.tPrice.textContent = homePrice.toLocaleString('ca-ES') + " €";
+        els.tRent.textContent = monthlyRent.toLocaleString('ca-ES') + " €";
+        els.tYears.textContent = years + " Anys";
+        els.tMortgage.textContent = (mortgageRate*100).toFixed(1) + "%";
+        els.tInvest.textContent = (investRate*100).toFixed(1) + "%";
+
+        // --- CENARI A: COMPRA ---
+        let initialCashNeeded = homePrice * (downPaymentPercent + closingCostsPercent);
+        let loanAmount = homePrice * (1 - downPaymentPercent);
+        
+        // Hipoteca Mensual
+        let rMonth = mortgageRate / 12;
+        let nMonths = 30 * 12; // Assumim hipoteca 30 anys estàndard per calcular quota
+        let monthlyMortgage = 0;
+        if (mortgageRate === 0) monthlyMortgage = loanAmount / nMonths;
+        else monthlyMortgage = loanAmount * (rMonth * Math.pow(1+rMonth, nMonths)) / (Math.pow(1+rMonth, nMonths) - 1);
+
+        // Evolució Compra
+        let finalHomeValue = homePrice * Math.pow(1 + homeAppreciation, years);
+        
+        // Deute pendent després de X anys
+        let monthsPassed = years * 12;
+        let remainingLoan = loanAmount * (Math.pow(1+rMonth, nMonths) - Math.pow(1+rMonth, monthsPassed)) / (Math.pow(1+rMonth, nMonths) - 1);
+        if (years >= 30) remainingLoan = 0;
+
+        let netWorthBuy = finalHomeValue - remainingLoan;
+
+        // --- CENARI B: LLOGUER ---
+        // El llogater inverteix els diners de l'entrada (initialCashNeeded)
+        let portfolio = initialCashNeeded;
+        
+        // Cicle mensual per acumular diferència
+        let currentRent = monthlyRent;
+        let currentHomeValue = homePrice; // Per calcular manteniment
+
+        // Rendiment mensual inversió
+        let investRateMonth = investRate / 12;
+
+        for (let i = 0; i < monthsPassed; i++) {
+            // Cost mensual propietari: Hipoteca + Manteniment (1%/12)
+            let costOwner = monthlyMortgage + (currentHomeValue * maintenanceRate / 12);
+            
+            // Cost mensual llogater: Lloguer
+            let costRenter = currentRent;
+
+            // Diferència
+            let difference = costOwner - costRenter;
+
+            // Actualitzar cartera llogater
+            portfolio = portfolio * (1 + investRateMonth); // Creixement del que ja hi ha
+            
+            if (difference > 0) {
+                // Comprar és més car -> Llogater inverteix la diferència
+                portfolio += difference;
+            } else {
+                // Llogar és més car -> Llogater treu diners de la cartera per pagar lloguer extra
+                portfolio += difference; // difference is negative here
+            }
+
+            // Inflació anual (cada 12 mesos)
+            if ((i+1) % 12 === 0) {
+                currentRent *= (1 + rentInflation);
+                currentHomeValue *= (1 + homeAppreciation);
+            }
+        }
+
+        let netWorthRent = portfolio;
+
+        // --- RESULTATS ---
+        els.nwBuy.textContent = Math.floor(netWorthBuy).toLocaleString('ca-ES') + " €";
+        els.nwRent.textContent = Math.floor(netWorthRent).toLocaleString('ca-ES') + " €";
+
+        let diff = Math.abs(netWorthBuy - netWorthRent);
+        
+        // Lògica guanyador
+        els.boxRent.classList.remove('winner');
+        els.boxBuy.classList.remove('winner');
+
+        if (netWorthBuy > netWorthRent) {
+            els.boxBuy.classList.add('winner');
+            els.verdict.innerHTML = `A llarg termini, <strong>COMPRAR</strong> et genera <br><span style="font-size:1.4em; color:#f1c40f">${Math.floor(diff).toLocaleString('ca-ES')} €</span><br> més de patrimoni que llogar.`;
+        } else {
+            els.boxRent.classList.add('winner');
+            els.verdict.innerHTML = `A llarg termini, <strong>LLOGAR i INVERTIR</strong> et genera <br><span style="font-size:1.4em; color:#f1c40f">${Math.floor(diff).toLocaleString('ca-ES')} €</span><br> més de patrimoni que comprar.`;
+        }
+    }
+
+    // Listeners
+    Object.values(els).forEach(el => {
+        if(el.addEventListener) el.addEventListener('input', calculate);
+    });
+
+    calculate();
+</script>
+</body>
+</html>
