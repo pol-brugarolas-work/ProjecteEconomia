@@ -6,7 +6,80 @@
     <title>Simulador d'Hipoteca</title>
     <link rel="stylesheet" href="../css/styles.css">
     <style>
-        /* Estils específics per a aquesta eina */
+        /* =========================================
+           ESTILS ESPECÍFICS "CLEAN UI"
+           ========================================= */
+        
+        /* Fem que els inputs semblin text normal (tècnica "Invisible Input") */
+        .clean-input {
+            background: transparent;
+            border: none;
+            color: inherit;
+            font-family: inherit;
+            font-weight: 700;
+            width: 100%;
+            padding: 0;
+            margin: 0;
+            outline: none;
+            cursor: text;
+            transition: color 0.2s;
+            -moz-appearance: textfield; /* Treure fletxes en Firefox */
+        }
+        /* Treure les fletxes de pujar/baixar dels inputs number en Chrome/Safari */
+        .clean-input::-webkit-outer-spin-button,
+        .clean-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        /* Estil quan l'usuari està escrivint (focus) */
+        .clean-input:focus {
+            border-bottom: 2px solid var(--accent);
+            border-radius: 0;
+        }
+
+        /* Contenidors de les dades */
+        .input-display-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 10px;
+        }
+        
+        .currency-wrapper {
+            display: flex;
+            align-items: baseline;
+            font-size: 1.2rem; /* Mida base */
+            color: var(--text-primary);
+            font-weight: 700;
+        }
+
+        /* El percentatge al costat dels diners */
+        .percent-wrapper {
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+            background: rgba(0,0,0,0.05);
+            padding: 4px 8px;
+            border-radius: 6px;
+            margin-left: 10px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        /* Mode "Risc" (menys del 20%) */
+        .percent-wrapper.risk {
+            background: rgba(231, 76, 60, 0.1);
+            color: #e74c3c;
+        }
+        /* Mode "Segur" (més del 20%) */
+        .percent-wrapper.safe {
+            background: rgba(46, 204, 113, 0.15);
+            color: #27ae60;
+        }
+
+        /* Grid de resultats */
         .summary-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -15,58 +88,33 @@
             text-align: center;
         }
         .summary-item {
-            background: #fff;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #eee;
+            background: var(--bg-card);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow-sm);
         }
-        .summary-label { font-size: 0.8em; color: var(--text-muted); display: block; margin-bottom: 5px;}
-        .summary-val { font-weight: 700; color: var(--text-main); }
+        .summary-label { font-size: 0.8em; color: var(--text-secondary); display: block; margin-bottom: 5px;}
+        .summary-val { font-weight: 700; color: var(--text-primary); font-size: 1.1em; }
 
-        /* Barra de proporció */
+        /* Barra visual */
         .mortgage-bar {
-            height: 12px;
+            height: 8px;
             width: 100%;
-            background: #eee;
-            border-radius: 6px;
+            background: #e5e5e5;
+            border-radius: 4px;
             margin-top: 25px;
             overflow: hidden;
             display: flex;
         }
-        .seg-loan { background-color: #3498db; height: 100%; transition: width 0.3s ease; }
-        .seg-interest { background-color: #e74c3c; height: 100%; transition: width 0.3s ease; }
+        .seg-loan { background-color: var(--accent); height: 100%; transition: width 0.5s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        .seg-interest { background-color: #ff3b30; height: 100%; transition: width 0.5s cubic-bezier(0.25, 0.8, 0.25, 1); }
 
-        /* Inputs numèrics personalitzats */
-        .input-row {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-        .input-wrapper {
-            position: relative;
-            flex: 1;
-        }
-        .input-wrapper input {
-            width: 100%;
-            padding: 8px 10px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 1rem;
-            box-sizing: border-box; /* Important per al padding */
-        }
-        .input-wrapper span {
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #888;
-            font-size: 0.9em;
-            pointer-events: none;
-        }
-        /* Estil per a alertes */
-        .warning-text {
-            color: #e74c3c !important;
-            border-color: #e74c3c !important;
+        /* Dark Mode Adjustments per als inputs */
+        @media (prefers-color-scheme: dark) {
+            .percent-wrapper { background: rgba(255,255,255,0.1); color: #a1a1a6; }
+            .mortgage-bar { background: #3a3a3c; }
+            /* Els colors risk/safe es veuen bé sobre fons fosc per defecte */
         }
     </style>
 </head>
@@ -80,46 +128,61 @@
         <h2>Simulador d'Hipoteca</h2>
         
         <div class="control-group">
-            <label>Preu de l'Habitatge</label>
-            <div class="input-wrapper" style="margin-bottom: 10px;">
-                <input type="number" id="in-price-num" value="200000" step="1000">
-                <span>€</span>
+            <div class="input-display-row">
+                <label>Preu de l'Habitatge</label>
+                <div class="currency-wrapper">
+                    <input type="number" id="in-price-num" class="clean-input" value="200000" step="1000" style="text-align: right; width: 120px;">
+                    <span style="margin-left:4px">€</span>
+                </div>
             </div>
             <input type="range" id="in-price" min="50000" max="800000" step="1000" value="200000">
         </div>
 
         <div class="control-group">
-            <label>Entrada Inicial (Estalvis)</label>
-            <div class="input-row">
-                <div class="input-wrapper" style="flex: 2;">
-                    <input type="number" id="in-down-num" value="40000" step="100">
-                    <span>€</span>
-                </div>
-                <div class="input-wrapper" style="flex: 1;">
-                    <input type="number" id="in-down-percent" value="20" step="0.1" max="100">
-                    <span>%</span>
+            <div class="input-display-row">
+                <label>Entrada Inicial</label>
+                <div style="display: flex; align-items: center;">
+                    <div class="currency-wrapper">
+                        <input type="number" id="in-down-num" class="clean-input" value="40000" step="100" style="text-align: right; width: 100px;">
+                        <span style="margin-left:4px">€</span>
+                    </div>
+                    
+                    <div class="percent-wrapper" id="percent-badge">
+                        <input type="number" id="in-down-percent" class="clean-input" value="20" step="0.1" max="100" style="width: 40px; text-align: right; font-size: 0.9em;">
+                        <span>%</span>
+                    </div>
                 </div>
             </div>
             <input type="range" id="in-down" min="0" max="200000" step="1000" value="40000">
-            <small id="ltv-warning" style="color: #e67e22; font-size: 0.8em; display: none; margin-top: 5px;">⚠️ Menys del 20%: És difícil que el banc ho aprovi.</small>
+            <small id="ltv-warning" style="color: #e74c3c; font-size: 0.75em; display: none; margin-top: 5px; text-align: right;">
+                ⚠️ Menys del 20% requereix perfil molt solvent.
+            </small>
         </div>
 
         <div class="control-group">
-            <label>Interès Anual (%)</label>
-            <div class="input-wrapper" style="margin-bottom: 10px; width: 100px;">
-                <input type="number" id="in-rate-num" value="3.5" step="0.1">
-                <span>%</span>
+            <div class="input-display-row">
+                <label>Interès Anual (%)</label>
+                <div class="currency-wrapper">
+                    <input type="number" id="in-rate-num" class="clean-input" value="3.5" step="0.1" style="text-align: right; width: 60px;">
+                    <span>%</span>
+                </div>
             </div>
             <input type="range" id="in-rate" min="0.1" max="10" step="0.1" value="3.5">
         </div>
 
         <div class="control-group">
-            <label>Durada (Anys): <span id="d-years">25 Anys</span></label>
+            <div class="input-display-row">
+                <label>Durada</label>
+                <div class="currency-wrapper">
+                    <span id="d-years-val">25</span>
+                    <span style="margin-left:4px">Anys</span>
+                </div>
+            </div>
             <input type="range" id="in-years" min="5" max="40" step="1" value="25">
         </div>
 
         <div class="results-box">
-            <div style="text-align:center; font-size:0.9em; color:var(--text-muted);">Quota Mensual Estimada</div>
+            <div style="text-align:center; font-size:0.9em; color:var(--text-secondary); margin-bottom:5px;">Quota Mensual Estimada</div>
             <div class="big-number" id="d-monthly">0 €</div>
 
             <div class="summary-grid">
@@ -128,8 +191,8 @@
                     <span class="summary-val" id="d-loan">0 €</span>
                 </div>
                 <div class="summary-item">
-                    <span class="summary-label">Total Interessos Pagats</span>
-                    <span class="summary-val" id="d-total-interest" style="color:#e74c3c">0 €</span>
+                    <span class="summary-label">Total Interessos</span>
+                    <span class="summary-val" id="d-total-interest" style="color:#ff3b30">0 €</span>
                 </div>
             </div>
 
@@ -138,9 +201,9 @@
                 <div id="bar-interest" class="seg-interest" style="width:30%"></div>
             </div>
             
-            <div class="legend" style="display:flex; justify-content:center; gap:20px; font-size:0.8em; margin-top:10px; color:#636e72;">
-                <span><span class="dot" style="background:#3498db; width:8px; height:8px; display:inline-block; border-radius:50%; margin-right:5px;"></span>Capital Retornat</span>
-                <span><span class="dot" style="background:#e74c3c; width:8px; height:8px; display:inline-block; border-radius:50%; margin-right:5px;"></span>Cost Interessos</span>
+            <div class="legend" style="display:flex; justify-content:center; gap:20px; font-size:0.75em; margin-top:15px; color:var(--text-secondary);">
+                <span><span class="dot" style="background:var(--accent); width:8px; height:8px; display:inline-block; border-radius:50%; margin-right:5px;"></span>Capital</span>
+                <span><span class="dot" style="background:#ff3b30; width:8px; height:8px; display:inline-block; border-radius:50%; margin-right:5px;"></span>Interessos</span>
             </div>
         </div>
     </div>
@@ -153,15 +216,16 @@
         rate: document.getElementById('in-rate'),
         years: document.getElementById('in-years'),
         
-        // Inputs Numèrics (Nous)
+        // Inputs Numèrics "Clean"
         priceNum: document.getElementById('in-price-num'),
         downNum: document.getElementById('in-down-num'),
         downPercent: document.getElementById('in-down-percent'),
         rateNum: document.getElementById('in-rate-num'),
         
-        // Altres elements
+        // Visuals
+        percentBadge: document.getElementById('percent-badge'),
         ltvWarning: document.getElementById('ltv-warning'),
-        dy: document.getElementById('d-years'), // Text durada
+        dyVal: document.getElementById('d-years-val'),
         
         // Resultats
         dm: document.getElementById('d-monthly'),
@@ -171,49 +235,45 @@
         bi: document.getElementById('bar-interest')
     };
 
-    // --- FUNCIONS DE SINCRONITZACIÓ ---
+    // --- LÒGICA DE SINCRONITZACIÓ ---
 
-    // 1. Quan canvia el Preu (Slider o Num)
     function updatePrice(source) {
         let val = parseFloat(source === 'slider' ? els.price.value : els.priceNum.value);
-        if(isNaN(val)) val = 0;
+        if(isNaN(val) || val < 0) val = 0;
 
-        // Sincronitzem l'altre input
+        // Sincronització
         if(source === 'slider') els.priceNum.value = val;
         else els.price.value = val;
 
-        // Actualitzem el màxim de l'entrada (no pots donar més entrada que el preu)
+        // L'entrada mai pot ser major que el preu
         els.down.max = val;
         
-        // Recalculem el % d'entrada basat en els € actuals (mantenim € fixos si es pot)
-        // Si els € d'entrada superen el nou preu, els baixem
+        // Si l'entrada actual supera el nou preu, la baixem
         let currentDown = parseFloat(els.downNum.value);
         if(currentDown > val) {
             currentDown = val;
             els.downNum.value = currentDown;
             els.down.value = currentDown;
         }
-        updateDownPercentFromEuro(); // Actualitzem el % visualment
+        
+        updateDownPercentFromEuro(); 
         calculate();
     }
 
-    // 2. Quan canvia l'Entrada en Euros (Slider o Num)
     function updateDownEuro(source) {
         let val = parseFloat(source === 'slider' ? els.down.value : els.downNum.value);
         let maxPrice = parseFloat(els.priceNum.value);
 
         if(isNaN(val)) val = 0;
-        if(val > maxPrice) val = maxPrice; // Protecció
+        if(val > maxPrice) val = maxPrice; 
 
-        // Sincronitzem
         if(source === 'slider') els.downNum.value = val;
         else els.down.value = val;
 
-        updateDownPercentFromEuro(); // Calculem quan és això en %
+        updateDownPercentFromEuro();
         calculate();
     }
 
-    // 3. Quan canvia l'Entrada en Percentatge (Num)
     function updateDownPercent() {
         let pct = parseFloat(els.downPercent.value);
         let price = parseFloat(els.priceNum.value);
@@ -221,40 +281,45 @@
         if(isNaN(pct)) pct = 0;
         if(pct > 100) pct = 100;
 
-        // Calculem quants euros són
+        // Càlcul invers: % a Euros
         let euros = (pct / 100) * price;
         
-        // Actualitzem inputs d'Euros i Slider
         els.downNum.value = euros.toFixed(0);
         els.down.value = euros.toFixed(0);
 
+        updatePercentColor(pct);
         calculate();
     }
 
-    // Helper: Calcula el % basat en els inputs d'Euros actuals
     function updateDownPercentFromEuro() {
         let price = parseFloat(els.priceNum.value);
         let down = parseFloat(els.downNum.value);
         
         if(price > 0) {
             let pct = (down / price) * 100;
-            els.downPercent.value = pct.toFixed(2); // Màxim 2 decimals
-            
-            // Validació visual LTV (Loan to Value)
-            // Si el % és menor al 20%, mostrem avís o canviem color
-            if(pct < 20) {
-                els.downPercent.style.color = "#e74c3c"; // Vermell
-                els.ltvWarning.style.display = "block";
-            } else {
-                els.downPercent.style.color = "inherit";
-                els.ltvWarning.style.display = "none";
-            }
+            els.downPercent.value = pct.toFixed(1); // 1 decimal és suficient per visualitzar
+            updatePercentColor(pct);
         } else {
             els.downPercent.value = 0;
+            updatePercentColor(0);
         }
     }
 
-    // 4. Quan canvia l'Interès
+    function updatePercentColor(pct) {
+        // Lògica visual de colors
+        if (pct < 20) {
+            // Risc
+            els.percentBadge.classList.add('risk');
+            els.percentBadge.classList.remove('safe');
+            els.ltvWarning.style.display = "block";
+        } else {
+            // Segur
+            els.percentBadge.classList.add('safe');
+            els.percentBadge.classList.remove('risk');
+            els.ltvWarning.style.display = "none";
+        }
+    }
+
     function updateRate(source) {
         let val = parseFloat(source === 'slider' ? els.rate.value : els.rateNum.value);
         if(isNaN(val)) val = 0;
@@ -265,20 +330,18 @@
         calculate();
     }
 
-    // --- CÀLCUL PRINCIPAL ---
+    // --- CÀLCUL FINANCE ---
     function calculate() {
         let price = parseFloat(els.priceNum.value);
         let down = parseFloat(els.downNum.value);
         let annualRate = parseFloat(els.rateNum.value);
         let years = parseFloat(els.years.value);
 
-        // Actualitzar text display
-        els.dy.textContent = years + " Anys";
+        els.dyVal.textContent = years;
 
         let loan = price - down; 
         if (loan < 0) loan = 0;
 
-        // Mètode Francès
         let monthlyRate = (annualRate / 100) / 12;
         let totalMonths = years * 12;
         let monthlyPayment = 0;
@@ -295,12 +358,12 @@
         let totalInterest = totalPaid - loan;
         if(totalInterest < 0) totalInterest = 0;
 
-        // Resultats a pantalla
+        // Formatem a moneda
         els.dm.textContent = Math.floor(monthlyPayment).toLocaleString('ca-ES') + " €/mes";
         els.dl.textContent = loan.toLocaleString('ca-ES') + " €";
         els.dti.textContent = Math.floor(totalInterest).toLocaleString('ca-ES') + " €";
 
-        // Barres visuals
+        // Barres
         let totalCost = loan + totalInterest;
         if (totalCost <= 0) totalCost = 1;
 
@@ -311,26 +374,21 @@
         els.bi.style.width = interestPercent + "%";
     }
 
-    // LISTENERS (Escoltem els esdeveniments)
-    
-    // Preu
+    // LISTENERS
     els.price.addEventListener('input', () => updatePrice('slider'));
     els.priceNum.addEventListener('input', () => updatePrice('num'));
 
-    // Entrada
     els.down.addEventListener('input', () => updateDownEuro('slider'));
     els.downNum.addEventListener('input', () => updateDownEuro('num'));
-    els.downPercent.addEventListener('input', updateDownPercent); // El nou input %
+    els.downPercent.addEventListener('input', updateDownPercent);
 
-    // Interès
     els.rate.addEventListener('input', () => updateRate('slider'));
     els.rateNum.addEventListener('input', () => updateRate('num'));
 
-    // Anys (només slider de moment)
     els.years.addEventListener('input', calculate);
 
-    // Inicialització
-    updatePrice('num'); // Per alinear-ho tot d'entrada
+    // Init
+    updatePrice('num');
 </script>
 </body>
 </html>
