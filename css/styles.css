@@ -8,7 +8,7 @@
     --border-light: rgba(0,0,0,0.04);
     --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
     --shadow-hover: 0 12px 24px rgba(0,0,0,0.08);
-    --radius: 18px; /* Radius una mica més pronunciat */
+    --radius: 18px;
 }
 
 body {
@@ -17,15 +17,15 @@ body {
     color: var(--text-primary);
     margin: 0;
     padding: 0;
-    -webkit-font-smoothing: antialiased; /* Text nítid a Mac/iOS */
+    -webkit-font-smoothing: antialiased;
 }
 
 /* =========================================
-   HEADER "CLEAN" (Estil Apple)
+   HEADER "CLEAN"
    ========================================= */
 .header-container {
     text-align: center;
-    padding: 80px 20px 40px; /* Reduïm padding inferior per apropar les eines */
+    padding: 80px 20px 40px;
     max-width: 700px;
     margin: 0 auto;
 }
@@ -41,8 +41,8 @@ body {
 }
 
 .main-title {
-    font-size: 3rem; /* 48px aprox */
-    font-weight: 700; /* Bold però no Black */
+    font-size: 3rem;
+    font-weight: 700;
     line-height: 1.08;
     letter-spacing: -0.015em;
     color: var(--text-primary);
@@ -59,24 +59,24 @@ body {
 }
 
 /* =========================================
-   BUSCADOR (Future-Proof)
+   BUSCADOR
    ========================================= */
 .search-wrapper {
-    margin: 40px auto 60px; /* Més espai per sota (60px) abans de les eines */
-    max-width: 500px; /* Una mica més ample per llegir millor */
+    margin: 40px auto 60px;
+    max-width: 500px;
     position: relative;
 }
 
 .search-input {
     width: 100%;
-    padding: 12px 20px 12px 45px; /* Espai per la icona */
+    padding: 12px 20px 12px 45px;
     border-radius: 12px;
     border: 1px solid transparent;
-    background: rgba(0,0,0,0.05); /* Fons griset subtil */
+    background: rgba(0,0,0,0.05);
     font-size: 0.95rem;
     color: var(--text-primary);
     transition: all 0.2s ease;
-    box-sizing: border-box; /* Evita que el padding trenqui l'ample */
+    box-sizing: border-box;
 }
 
 .search-input:focus {
@@ -96,65 +96,57 @@ body {
 }
 
 /* =========================================
-   GRID RESPONSIVE (Control Manual UI/UX)
+   GRID RESPONSIVE (4 Columnes)
    ========================================= */
 
 .dashboard-grid {
     display: grid;
-    gap: 30px; /* Espai generós entre targetes per separar-les bé */
+    gap: 40px; /* Separació generosa entre targetes */
     padding: 20px 40px 80px;
-    max-width: 1280px; /* Limitem l'amplada total perquè no s'estirin massa */
+    max-width: 1300px;
     margin: 0 auto;
-    
     /* Per defecte (Mòbils): 1 columna */
     grid-template-columns: 1fr;
+    align-items: stretch; /* Igualar alçada */
 }
 
-/* TAULETES (Pantalles mitjanes > 600px): 2 Columnes */
+/* TAULETES: 2 Columnes */
 @media (min-width: 600px) {
     .dashboard-grid {
         grid-template-columns: repeat(2, 1fr);
     }
 }
 
-/* ORDINADORS (Pantalles grans > 1100px): 4 Columnes EXACTES */
+/* ORDINADORS: 4 Columnes EXACTES */
 @media (min-width: 1100px) {
     .dashboard-grid {
         grid-template-columns: repeat(4, 1fr);
     }
 }
 
+/* =========================================
+   TARGETES (TOOL CARDS)
+   ========================================= */
 .tool-card {
     background: var(--bg-card);
     border-radius: var(--radius);
-    padding: 24px; /* Padding intern reduït per guanyar espai */
+    padding: 24px;
     text-decoration: none;
     color: var(--text-primary);
     border: 1px solid var(--border-light);
     box-shadow: var(--shadow-sm);
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    
+    /* Estructura interna flexible */
     display: flex;
     flex-direction: column;
-    align-items: flex-start; /* Alineat a l'esquerra es veu més pro */
+    justify-content: flex-start;
+    align-items: flex-start;
     text-align: left;
-    height: 100%; /* Igualar alçades */
+    
+    height: 100%; /* Ocupar tota l'alçada de la fila */
+    min-height: 220px;
     position: relative;
-    background: #ffffff; /* Assegurem blanc pur */
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05); /* Ombra més definida, menys difusa */
-    border: 1px solid rgba(0,0,0,0.08); /* Vora subtil per delimitar */
-    /* AFEGEIX O ASSEGURA AIXÒ PER L'ALINEACIÓ: */
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start; /* Contingut a dalt */
-    height: 100%; /* Força que totes les targetes de la fila tinguin la mateixa alçada */
-    min-height: 220px; /* Alçada mínima per uniformitat visual */
-}
-
-/* Això empeny el text cap avall si cal, o manté l'icona al seu lloc */
-.tool-card > div {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
 }
 
 .tool-card:hover {
@@ -162,16 +154,26 @@ body {
     box-shadow: var(--shadow-hover);
 }
 
+/* Aquesta part empeny el text si cal */
+.tool-card > div {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* CORRECCIÓ ICONES: Fixes i Quadrades */
 .tool-icon { 
-    font-size: 2em; /* Icona més petita i elegant */
-    margin-bottom: 16px;
-    background: #f5f5f7; /* Cercle de fons per la icona */
-    width: 48px;
-    height: 48px;
+    width: 60px;
+    height: 60px;
+    min-height: 60px; /* Imprescindible per no xafar-se */
+    font-size: 2em;
+    margin-bottom: 20px;
+    background: #f5f5f7;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 12px;
+    border-radius: 14px;
+    flex-shrink: 0; /* Prohibir que s'encongeixi */
 }
 
 .tool-title { 
@@ -188,7 +190,9 @@ body {
     margin: 0;
 }
 
-/* UI GENERAL DINS LES EINES (Botons i Inputs) */
+/* =========================================
+   UI ELEMENTS GENERALS (Inputs, Botons, etc)
+   ========================================= */
 .top-nav { padding: 20px; max-width: 800px; margin: 0 auto; }
 .btn-back { text-decoration:none; color:var(--text-secondary); font-weight:500; font-size:0.9rem; display:inline-flex; align-items:center; transition:color 0.2s;}
 .btn-back:hover { color:var(--accent); }
@@ -196,27 +200,28 @@ body {
 
 .container { max-width:700px; margin:20px auto 60px; background:#fff; padding:40px; border-radius:var(--radius); box-shadow:var(--shadow-sm); }
 h2 { text-align:center; font-weight:700; margin-bottom:30px; color:var(--text-primary); }
+
 .control-group { margin-bottom:25px; }
 label { display:flex; justify-content:space-between; font-weight:500; font-size:0.95rem; margin-bottom:10px; color:var(--text-primary); }
+
 input[type=range] { width:100%; height:6px; background:#e5e5e5; border-radius:10px; outline:none; -webkit-appearance:none; }
-input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:20px; height:20px; background:#fff; box-shadow:0 2px 6px rgba(0,0,0,0.2); border:1px solid rgba(0,0,0,0.1); border-radius:50%; cursor:pointer; margin-top:-7px; /* Centrar */ }
-/* Fix per Firefox/Chrome alignment */
+input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:20px; height:20px; background:#fff; box-shadow:0 2px 6px rgba(0,0,0,0.2); border:1px solid rgba(0,0,0,0.1); border-radius:50%; cursor:pointer; margin-top:-7px; }
 input[type=range]::-webkit-slider-runnable-track { width:100%; height:6px; cursor:pointer; background:#e5e5e5; border-radius:10px; }
+
 .results-box { background:#f5f5f7; padding:25px; border-radius:14px; margin-top:30px; text-align: center; }
 .big-number { font-size:2.2em; font-weight:700; color:var(--text-primary); margin:10px 0; letter-spacing:-0.02em;}
 
-/* Footer */
 footer { text-align: center; padding: 40px; color: var(--text-secondary); font-size: 0.8rem; }
 footer a { color: var(--text-secondary); text-decoration: none; }
 
 
 /* =========================================
-   MODE FOSC V3 (CORRECCIÓ DE CONTRASTOS)
+   MODE FOSC CORRECTE (V3 - Llegibilitat Total)
    ========================================= */
 @media (prefers-color-scheme: dark) {
     :root {
         --bg-body: #000000;
-        --bg-card: #1c1c1e;
+        --bg-card: #1c1c1e; /* Gris fosc Apple */
         --text-primary: #ffffff;
         --text-secondary: #a1a1a6;
         --accent: #0a84ff;
@@ -226,76 +231,90 @@ footer a { color: var(--text-secondary); text-decoration: none; }
 
     body { background-color: var(--bg-body); color: var(--text-primary); }
 
-    /* 1. CONTENIDORS GENERALS */
-    .tool-card, .container, .results-box {
+    /* 1. CONTENIDORS PRINCIPALS */
+    .tool-card, 
+    .container, 
+    .results-box {
         background-color: var(--bg-card) !important;
         border-color: var(--border-light);
         color: var(--text-primary);
     }
 
-    /* 2. ARREGLAR EL BUSCADOR (Quan escrius) */
+    /* 2. ICONES */
+    .tool-icon {
+        background-color: #2c2c2e !important;
+        color: #fff;
+        border: 1px solid #3a3a3c;
+    }
+
+    /* 3. BUSCADOR (Solució Text Invisible) */
     .search-input {
         background-color: #2c2c2e !important;
         color: #ffffff !important;
         border: 1px solid #3a3a3c;
     }
     .search-input:focus {
-        background-color: #1c1c1e !important; /* Més fosc al clicar */
+        background-color: #1c1c1e !important;
         color: #ffffff !important;
         border-color: var(--accent);
         outline: none;
     }
 
-    /* 3. ARREGLAR CAIXES DE COLORS (Lloguer vs Compra) */
-    /* En lloc de fons pastel, fem fons fosc amb una vora de color */
-    
-    /* Caixa Lloguer (Blau) */
-    .box-rent {
-        background-color: rgba(33, 150, 243, 0.15) !important; /* Blau molt transparent */
-        border: 1px solid #2196f3 !important;
-        color: #fff !important;
-    }
-    /* Caixa Compra (Verd) */
-    .box-buy {
-        background-color: rgba(46, 204, 113, 0.15) !important; /* Verd molt transparent */
-        border: 1px solid #2ecc71 !important;
-        color: #fff !important;
-    }
-    
-    /* Títols dins de les caixes de colors */
-    .net-worth-label { color: #ddd !important; }
-    .net-worth-val { color: #fff !important; }
-
-    /* 4. ARREGLAR HIPOTECA I SOU (Caixes blanques que no es veien) */
-    .summary-item, .salary-option, .receipt-box, .context-text {
+    /* 4. CAIXES INTERNES (HIPOTECA, SOU, PRÉSTEC) */
+    /* Tot el que sigui una caixa blanca, ara serà gris fosc */
+    .summary-item, 
+    .salary-option, 
+    .receipt-box, 
+    .context-text,
+    .status-message {
         background-color: #2c2c2e !important;
         border: 1px solid #3a3a3c !important;
         color: #fff !important;
     }
-    
-    /* Textos secundaris dins d'aquestes caixes */
-    .summary-label, .salary-label, .receipt-row {
+
+    /* Sub-textos grisos dins les caixes */
+    .summary-label, 
+    .salary-label, 
+    .receipt-row span {
         color: #a1a1a6 !important;
     }
-    .summary-val, .salary-val, .receipt-row.final {
-        color: #fff !important;
-    }
     
-    /* L'opció seleccionada (Blava) al Sou Net */
+    /* Valors finals blancs */
+    .summary-val, 
+    .salary-val, 
+    .receipt-row.final,
+    .receipt-row span:last-child {
+        color: #ffffff !important;
+    }
+
+    /* Selecció activa (Blava) */
     .salary-option.highlight {
         background-color: rgba(10, 132, 255, 0.2) !important;
         border-color: var(--accent) !important;
     }
 
-    /* 5. ARREGLAR INPUTS LLISCANTS (SLIDERS) */
+    /* 5. CAIXES DE COLORS (LLOGUER VS COMPRA) */
+    /* Fons translúcids en lloc de pastels sòlids */
+    .box-rent {
+        background-color: rgba(33, 150, 243, 0.15) !important;
+        border: 1px solid #2196f3 !important;
+        color: #fff !important;
+    }
+    .box-buy {
+        background-color: rgba(46, 204, 113, 0.15) !important;
+        border: 1px solid #2ecc71 !important;
+        color: #fff !important;
+    }
+    .net-worth-label { color: #ddd !important; }
+    .net-worth-val { color: #fff !important; }
+
+    /* 6. INPUTS I TEXTOS GENERALS */
     input[type=range] { background: #3a3a3c; }
     
-    /* 6. TÍTOLS I TEXTOS */
     h1, h2, h3, label { color: #fff !important; }
     p, .tool-desc, .sub-title { color: #a1a1a6 !important; }
     
-    /* 7. NÚMEROS GRANS A LES CALCULADORES */
     .big-number { color: #fff !important; }
-    /* Si el número és vermell (cost), el mantenim vermell clar */
-    .big-number[style*="color"] { filter: brightness(1.2); } 
+    /* Manté els colors (vermell/verd) si n'hi ha, però els il·lumina */
+    .big-number[style*="color"] { filter: brightness(1.3); } 
 }
