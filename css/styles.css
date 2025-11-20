@@ -182,75 +182,83 @@ footer a { color: var(--text-secondary); text-decoration: none; }
 
 
 /* =========================================
-   MODE FOSC AUTOMÀTIC (Dark Mode)
-   S'activa sol si el sistema de l'usuari és fosc
+   MODE FOSC CORREGIT (Versió V2)
+   Força els fons foscos per evitar "blanc sobre blanc"
    ========================================= */
 
 @media (prefers-color-scheme: dark) {
     :root {
-        /* Invertim la paleta a tons foscos elegants (Estil iOS Dark) */
-        --bg-body: #000000; /* Negre pur o gairebé negre */
-        --bg-card: #1c1c1e; /* Gris fosc per les targetes */
-        --text-primary: #f5f5f7; /* Blanc trencat per llegibilitat */
-        --text-secondary: #a1a1a6; /* Gris clar */
-        
-        --accent: #0a84ff; /* El blau s'il·lumina una mica sobre fosc */
-        
-        --border-light: rgba(255,255,255,0.1);
-        --shadow-sm: 0 4px 12px rgba(0,0,0,0.5);
-        --shadow-hover: 0 12px 24px rgba(0,0,0,0.7);
+        --bg-body: #000000;
+        --bg-card: #1c1c1e; /* Gris Fosc Apple */
+        --text-primary: #f5f5f7;
+        --text-secondary: #a1a1a6;
+        --accent: #0a84ff;
+        --border-light: rgba(255,255,255,0.15);
+        --shadow-sm: 0 4px 12px rgba(0,0,0,0.6);
     }
 
-    /* AJUSTOS ESPECÍFICS PER A ELEMENTS FOSCOS */
-
-    /* Fons de les icones al menú */
-    .tool-icon { 
-        background: #2c2c2e; 
+    /* 1. Forcem el fons de la pàgina */
+    body {
+        background-color: var(--bg-body);
+        color: var(--text-primary);
     }
 
-    /* Inputs i Barres de Cerca */
-    .search-input { 
-        background: #2c2c2e; 
+    /* 2. ARREGLEM LES TARGETES I CONTENIDORS (El problema principal) */
+    .tool-card, 
+    .container, 
+    .salary-option, 
+    .receipt-box,
+    .results-box {
+        background-color: var(--bg-card) !important; /* !important assegura que matxaca el blanc */
+        color: var(--text-primary);
+        border-color: var(--border-light);
+    }
+
+    /* 3. Arreglem els textos que s'han quedat grisos o invisibles */
+    h1, h2, h3, h4, label {
+        color: var(--text-primary) !important;
+    }
+    
+    .tool-desc, .sub-title, p {
+        color: var(--text-secondary) !important;
+    }
+
+    /* 4. Elements específics que veig malament a les fotos */
+    
+    /* La caixa de "Rebut" al préstec (Foto 2) */
+    .receipt-row, .receipt-row.final {
+        color: var(--text-primary);
+    }
+    .receipt-row span {
+        color: var(--text-secondary);
+    }
+    .receipt-row span:last-child { /* Els valors numèrics a la dreta */
         color: var(--text-primary); 
     }
-    .search-input:focus {
-        background: #3a3a3c;
-        border-color: var(--accent);
-    }
 
-    /* Sliders (Barres de desplaçament) */
+    /* Les opcions de sou (Foto 3) */
+    .salary-label { color: var(--text-secondary); }
+    .salary-val { color: var(--text-primary); }
+    
+    /* Inputs i Sliders */
     input[type=range] {
         background: #3a3a3c;
     }
-    input[type=range]::-webkit-slider-runnable-track {
-        background: #3a3a3c;
-    }
-    input[type=range]::-webkit-slider-thumb {
-        background: #f5f5f7; /* La rodona del slider en blanc */
-        border-color: #000;
-    }
-
-    /* Caixes de resultats dins les eines */
-    .results-box {
-        background: #000000; /* Contrast fort dins la targeta */
-    }
-
-    /* Elements específics d'algunes eines */
-    .salary-option { background: #1c1c1e; }
-    .salary-option.highlight { background: rgba(10, 132, 255, 0.15); border-color: var(--accent); }
-    .receipt-box { background: #1c1c1e; border-color: #3a3a3c; }
-    .pie-inner { background: #1c1c1e; } /* El forat del dònut */
-    .context-text, .status-message { background: #1c1c1e; border-color: #3a3a3c; }
     
-    /* La barra d'hipoteca i altres gràfics */
-    .mortgage-bar, .chart-bar-container, .safety-meter, .progress-track {
-        background: #3a3a3c;
+    /* El cercle de les icones a l'inici */
+    .tool-icon {
+        background-color: #2c2c2e;
     }
     
-    /* El degradat del text del títol principal */
-    .hero-title, .main-title {
-        background: -webkit-linear-gradient(45deg, #ffffff, #a1a1a6);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+    /* Buscador */
+    .search-input {
+        background-color: #2c2c2e;
+        color: white;
+        border: 1px solid #3a3a3c;
+    }
+    
+    /* Els gràfics de barres */
+    .chart-bar-container, .mortgage-bar, .safety-meter {
+        background-color: #3a3a3c;
     }
 }
