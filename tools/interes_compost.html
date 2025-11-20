@@ -6,6 +6,40 @@
     <title>Calculadora d'Interès Compost</title>
     <link rel="stylesheet" href="../css/styles.css">
     <style>
+        /* REUTILITZACIÓ D'ESTILS CLEAN UI */
+        .clean-input {
+            background: transparent;
+            border: none;
+            color: inherit;
+            font-family: inherit;
+            font-weight: 700;
+            width: 100%;
+            padding: 0;
+            margin: 0;
+            outline: none;
+            cursor: text;
+            transition: color 0.2s;
+            -moz-appearance: textfield;
+        }
+        .clean-input::-webkit-outer-spin-button,
+        .clean-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .clean-input:focus { border-bottom: 2px solid var(--accent); border-radius: 0; }
+
+        .input-display-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 10px;
+        }
+        .currency-wrapper {
+            display: flex;
+            align-items: baseline;
+            font-size: 1.2rem;
+            color: var(--text-primary);
+            font-weight: 700;
+        }
+
+        /* Estils específics Gràfic */
         .chart-bar-container {
             height: 30px;
             width: 100%;
@@ -13,17 +47,16 @@
             border-radius: 15px;
             overflow: hidden;
             display: flex;
-            margin-top: 10px;
+            margin-top: 15px;
         }
         .bar-segment { height: 100%; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-        .bg-principal { background-color: #5a5e61; }
-        .bg-interest { background-color: var(--success); }
+        .bg-principal { background-color: #b2bec3; } /* Gris per al que poses tu */
+        .bg-interest { background-color: #00b894; } /* Verd per al guany */
         
         .legend {
             display: flex; justify-content: center; gap: 20px; 
-            font-size: 0.85em; margin-top: 15px; color: var(--text-muted);
+            font-size: 0.85em; margin-top: 15px; color: var(--text-secondary);
         }
-        .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; }
     </style>
 </head>
 <body>
@@ -36,28 +69,52 @@
         <h2>Interès Compost</h2>
 
         <div class="control-group">
-            <label>Dipòsit Inicial: <span id="disp-principal">1.000 €</span></label>
+            <div class="input-display-row">
+                <label>Dipòsit Inicial</label>
+                <div class="currency-wrapper">
+                    <input type="number" id="in-principal-num" class="clean-input" value="1000" step="100" style="text-align: right; width: 100px;">
+                    <span style="margin-left:4px">€</span>
+                </div>
+            </div>
             <input type="range" id="in-principal" min="0" max="100000" step="100" value="1000">
         </div>
 
         <div class="control-group">
-            <label>Aportació Mensual: <span id="disp-monthly">100 €</span></label>
+            <div class="input-display-row">
+                <label>Aportació Mensual</label>
+                <div class="currency-wrapper">
+                    <input type="number" id="in-monthly-num" class="clean-input" value="100" step="10" style="text-align: right; width: 100px;">
+                    <span style="margin-left:4px">€</span>
+                </div>
+            </div>
             <input type="range" id="in-monthly" min="0" max="3000" step="50" value="100">
         </div>
 
         <div class="control-group">
-            <label>Taxa Anual (%): <span id="disp-rate">5.0%</span></label>
+            <div class="input-display-row">
+                <label>Rendiment Anual (Mitjana)</label>
+                <div class="currency-wrapper">
+                    <input type="number" id="in-rate-num" class="clean-input" value="5.0" step="0.1" style="text-align: right; width: 60px;">
+                    <span style="margin-left:4px">%</span>
+                </div>
+            </div>
             <input type="range" id="in-rate" min="0" max="15" step="0.1" value="5.0">
         </div>
 
         <div class="control-group">
-            <label>Temps (Anys): <span id="disp-years">10 Anys</span></label>
+            <div class="input-display-row">
+                <label>Temps d'Inversió</label>
+                <div class="currency-wrapper">
+                    <span id="disp-years-val">10</span>
+                    <span style="margin-left:4px">Anys</span>
+                </div>
+            </div>
             <input type="range" id="in-years" min="1" max="40" step="1" value="10">
         </div>
 
         <div class="results-box">
-            <div style="text-align:center; font-size:0.9em; color:var(--text-muted);">Saldo Total Estimat</div>
-            <div class="big-number" id="disp-total">0 €</div>
+            <div style="text-align:center; font-size:0.9em; color:var(--text-secondary); margin-bottom:5px;">Saldo Total Estimat</div>
+            <div class="big-number" id="disp-total" style="color: #00b894;">0 €</div>
 
             <div class="chart-bar-container">
                 <div id="bar-principal" class="bar-segment bg-principal" style="width:50%"></div>
@@ -65,48 +122,87 @@
             </div>
 
             <div class="legend">
-                <span><span class="dot bg-principal"></span>Diners posats per tu</span>
-                <span><span class="dot bg-interest"></span>Generat pels interessos</span>
+                <span><span class="dot" style="background:#b2bec3; width:8px; height:8px; display:inline-block; border-radius:50%; margin-right:5px;"></span>Diners aportats</span>
+                <span><span class="dot" style="background:#00b894; width:8px; height:8px; display:inline-block; border-radius:50%; margin-right:5px;"></span>Generat (Interessos)</span>
             </div>
         </div>
     </div>
 
 <script>
-    // Lògica de càlcul
     const els = {
+        // Sliders
         p: document.getElementById('in-principal'),
         m: document.getElementById('in-monthly'),
         r: document.getElementById('in-rate'),
         t: document.getElementById('in-years'),
+        
+        // Numeric Inputs (Clean UI)
+        pNum: document.getElementById('in-principal-num'),
+        mNum: document.getElementById('in-monthly-num'),
+        rNum: document.getElementById('in-rate-num'),
+        
         // Displays
-        dp: document.getElementById('disp-principal'),
-        dm: document.getElementById('disp-monthly'),
-        dr: document.getElementById('disp-rate'),
-        dt: document.getElementById('disp-years'),
+        dt: document.getElementById('disp-years-val'),
         dTotal: document.getElementById('disp-total'),
+        
         // Bars
         barP: document.getElementById('bar-principal'),
         barI: document.getElementById('bar-interest')
     };
 
-    function update() {
-        const P = parseFloat(els.p.value);
-        const M = parseFloat(els.m.value);
-        const R = parseFloat(els.r.value) / 100;
-        const T = parseFloat(els.t.value);
+    // --- FUNCIÓ UPDATE UNIVERSAL ---
+    function update(source, type) {
+        // 1. Llegir valors segons qui ha disparat l'event
+        // Type: 'p' (principal), 'm' (monthly), 'r' (rate), 't' (time)
+        // Source: 'slider' o 'num'
+        
+        let P, M, R, T;
 
-        // Update texts
-        els.dp.textContent = P.toLocaleString('ca-ES') + " €";
-        els.dm.textContent = M.toLocaleString('ca-ES') + " €";
-        els.dr.textContent = (R*100).toFixed(1) + "%";
-        els.dt.textContent = T + " Anys";
+        // Sincronitzar P (Principal)
+        if (type === 'p') {
+            let val = parseFloat(source === 'slider' ? els.p.value : els.pNum.value);
+            if (isNaN(val)) val = 0;
+            els.p.value = val;
+            els.pNum.value = val;
+        }
 
-        // Math: FV = P(1+r/n)^(nt) + PMT * ...
-        const n = 12; 
+        // Sincronitzar M (Mensual)
+        if (type === 'm') {
+            let val = parseFloat(source === 'slider' ? els.m.value : els.mNum.value);
+            if (isNaN(val)) val = 0;
+            els.m.value = val;
+            els.mNum.value = val;
+        }
+
+        // Sincronitzar R (Rate)
+        if (type === 'r') {
+            let val = parseFloat(source === 'slider' ? els.r.value : els.rNum.value);
+            if (isNaN(val)) val = 0;
+            els.r.value = val;
+            els.rNum.value = val;
+        }
+
+        // Obtenir valors finals per càlcul
+        P = parseFloat(els.pNum.value);
+        M = parseFloat(els.mNum.value);
+        R = parseFloat(els.rNum.value) / 100;
+        T = parseFloat(els.t.value);
+
+        // Actualitzar Text Anys (només slider)
+        els.dt.textContent = T;
+
+        // --- CÀLCUL MATEMÀTIC ---
+        // FV = P(1+r/n)^(nt) + PMT * ...
+        const n = 12; // Capitalització mensual
         const totalMonths = T * 12;
         const rateMonth = R / 12;
 
-        let fv = P * Math.pow(1 + rateMonth, totalMonths);
+        let fv = 0;
+        
+        // Part 1: El dipòsit inicial creixent
+        fv += P * Math.pow(1 + rateMonth, totalMonths);
+
+        // Part 2: Les aportacions mensuals
         if (rateMonth > 0) {
             fv += M * (Math.pow(1 + rateMonth, totalMonths) - 1) / rateMonth;
         } else {
@@ -116,9 +212,10 @@
         const totalInvested = P + (M * totalMonths);
         const totalInterest = fv - totalInvested;
 
+        // Resultats Visuals
         els.dTotal.textContent = Math.floor(fv).toLocaleString('ca-ES') + " €";
 
-        // Update Bar widths
+        // Barres
         let totalW = fv > 0 ? fv : 1;
         const pWidth = (totalInvested / totalW) * 100;
         const iWidth = (totalInterest / totalW) * 100;
@@ -127,9 +224,25 @@
         els.barI.style.width = iWidth + "%";
     }
 
-    // Listeners
-    [els.p, els.m, els.r, els.t].forEach(e => e.addEventListener('input', update));
-    update();
+    // --- LISTENERS ---
+    
+    // Principal
+    els.p.addEventListener('input', () => update('slider', 'p'));
+    els.pNum.addEventListener('input', () => update('num', 'p'));
+
+    // Mensual
+    els.m.addEventListener('input', () => update('slider', 'm'));
+    els.mNum.addEventListener('input', () => update('num', 'm'));
+
+    // Interès
+    els.r.addEventListener('input', () => update('slider', 'r'));
+    els.rNum.addEventListener('input', () => update('num', 'r'));
+
+    // Temps (Només slider per simplicitat UI)
+    els.t.addEventListener('input', () => update('slider', 't'));
+
+    // Init
+    update('slider', 'p'); // Trigger inicial
 </script>
 
 </body>

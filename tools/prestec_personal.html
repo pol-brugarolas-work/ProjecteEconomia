@@ -6,7 +6,41 @@
     <title>Calculadora Préstec Personal / Cotxe</title>
     <link rel="stylesheet" href="../css/styles.css">
     <style>
-        /* Estil específic tipus "Rebut" */
+        /* CLEAN UI STYLES */
+        .clean-input {
+            background: transparent;
+            border: none;
+            color: inherit;
+            font-family: inherit;
+            font-weight: 700;
+            font-size: 1.2rem; /* Mida gran igualada */
+            width: 100%;
+            padding: 0;
+            margin: 0;
+            outline: none;
+            cursor: text;
+            transition: color 0.2s;
+            -moz-appearance: textfield;
+        }
+        .clean-input::-webkit-outer-spin-button,
+        .clean-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .clean-input:focus { border-bottom: 2px solid var(--accent); border-radius: 0; }
+
+        .input-display-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 10px;
+        }
+        .currency-wrapper {
+            display: flex;
+            align-items: baseline;
+            font-size: 1.2rem;
+            color: var(--text-primary);
+            font-weight: 700;
+        }
+
+        /* Rebut */
         .receipt-box {
             background: #fff;
             border: 1px dashed #b2bec3;
@@ -31,7 +65,7 @@
             margin-top: 15px;
         }
         
-        /* Gràfic circular senzill (CSS Conic Gradient) */
+        /* Pie Chart */
         .pie-chart-wrapper {
             width: 120px;
             height: 120px;
@@ -97,32 +131,54 @@
         </div>
 
         <div class="control-group">
-            <label>Import a Demanar: <span id="t-amount">15.000 €</span></label>
+            <div class="input-display-row">
+                <label>Import a Demanar</label>
+                <div class="currency-wrapper">
+                    <input type="number" id="in-amount-num" class="clean-input" value="15000" step="500" style="text-align: right; width: 100px;">
+                    <span style="margin-left:4px">€</span>
+                </div>
+            </div>
             <input type="range" id="in-amount" min="1000" max="60000" step="500" value="15000">
         </div>
 
         <div class="control-group">
-            <label>Interès Anual (TIN): <span id="t-rate">7.5%</span></label>
+            <div class="input-display-row">
+                <label>Interès Anual (TIN)</label>
+                <div class="currency-wrapper">
+                    <input type="number" id="in-rate-num" class="clean-input" value="7.5" step="0.1" style="text-align: right; width: 60px;">
+                    <span style="margin-left:4px">%</span>
+                </div>
+            </div>
             <input type="range" id="in-rate" min="2" max="20" step="0.1" value="7.5">
             <p style="font-size:0.75rem; color:#b2bec3; margin-top:5px;">*Préstecs cotxe solen ser 6-9%. Targetes >18%.</p>
         </div>
 
         <div class="control-group">
-            <label>Durada (Mesos): <span id="t-months">60 mesos (5 anys)</span></label>
+            <div class="input-display-row">
+                <label>Durada (<span id="d-years-text" style="font-weight:normal">5 anys</span>)</label>
+                <div class="currency-wrapper">
+                    <input type="number" id="in-months-num" class="clean-input" value="60" step="1" style="text-align: right; width: 60px;">
+                    <span style="margin-left:4px">mesos</span>
+                </div>
+            </div>
             <input type="range" id="in-months" min="12" max="120" step="6" value="60">
         </div>
     </div>
 
 <script>
     const els = {
+        // Sliders
         amount: document.getElementById('in-amount'),
         rate: document.getElementById('in-rate'),
         months: document.getElementById('in-months'),
-        // Texts
-        tAmount: document.getElementById('t-amount'),
-        tRate: document.getElementById('t-rate'),
-        tMonths: document.getElementById('t-months'),
-        // Results
+        
+        // Numeric Inputs
+        amountNum: document.getElementById('in-amount-num'),
+        rateNum: document.getElementById('in-rate-num'),
+        monthsNum: document.getElementById('in-months-num'),
+
+        // Visuals
+        yearsText: document.getElementById('d-years-text'),
         dMonthly: document.getElementById('d-monthly'),
         dPrincipal: document.getElementById('d-principal'),
         dInterest: document.getElementById('d-interest'),
@@ -131,24 +187,43 @@
         pie: document.getElementById('chart-pie')
     };
 
-    function calculate() {
-        let P = parseFloat(els.amount.value);
-        let annualRate = parseFloat(els.rate.value);
-        let n = parseFloat(els.months.value); // Mesos directament
+    function update(source, type) {
+        let val;
 
-        // UI Updates
-        els.tAmount.textContent = P.toLocaleString('ca-ES') + " €";
-        els.tRate.textContent = annualRate.toFixed(1) + "%";
-        
+        // Sincronització
+        if (type === 'amount') {
+            val = parseFloat(source === 'slider' ? els.amount.value : els.amountNum.value);
+            if (isNaN(val)) val = 0;
+            els.amount.value = val;
+            els.amountNum.value = val;
+        }
+        if (type === 'rate') {
+            val = parseFloat(source === 'slider' ? els.rate.value : els.rateNum.value);
+            if (isNaN(val)) val = 0;
+            els.rate.value = val;
+            els.rateNum.value = val;
+        }
+        if (type === 'months') {
+            val = parseFloat(source === 'slider' ? els.months.value : els.monthsNum.value);
+            if (isNaN(val)) val = 0;
+            els.months.value = val;
+            els.monthsNum.value = val;
+        }
+
+        // Càlcul
+        let P = parseFloat(els.amountNum.value);
+        let annualRate = parseFloat(els.rateNum.value);
+        let n = parseFloat(els.monthsNum.value);
+
+        // Actualitzar text "anys"
         let years = (n / 12).toFixed(1);
-        // Treure el .0 si és enter
         if (years.endsWith('.0')) years = years.slice(0, -2);
-        els.tMonths.textContent = `${n} mesos (${years} anys)`;
+        els.yearsText.textContent = years + " anys";
 
-        // Math: Amortització Francesa (mensual)
+        // Mètode Francès
         let r = (annualRate / 100) / 12;
-        
         let monthlyPayment = 0;
+        
         if (annualRate === 0) {
             monthlyPayment = P / n;
         } else {
@@ -158,27 +233,31 @@
         let totalPaid = monthlyPayment * n;
         let totalInterest = totalPaid - P;
 
-        // Outputs
+        // Resultats UI
         els.dMonthly.textContent = Math.floor(monthlyPayment).toLocaleString('ca-ES') + " €";
         els.dPrincipal.textContent = P.toLocaleString('ca-ES') + " €";
         els.dInterest.textContent = Math.floor(totalInterest).toLocaleString('ca-ES') + " €";
         els.dTotal.textContent = Math.floor(totalPaid).toLocaleString('ca-ES') + " €";
 
-        // Chart Update
+        // Chart
         let percentInterest = (totalInterest / totalPaid) * 100;
         let percentPrincipal = 100 - percentInterest;
         
-        // Format CSS Conic Gradient: [ColorPrincipal 0% X%, ColorInterès X% 100%]
-        // Nota: el color principal és Blau (#0071e3), interès Vermell (#e74c3c)
         els.pie.style.background = `conic-gradient(var(--accent) 0% ${percentPrincipal}%, #e74c3c ${percentPrincipal}% 100%)`;
-        
         els.dPercentInt.textContent = percentInterest.toFixed(0) + "%";
     }
 
     // Listeners
-    [els.amount, els.rate, els.months].forEach(e => e.addEventListener('input', calculate));
+    els.amount.addEventListener('input', () => update('slider', 'amount'));
+    els.amountNum.addEventListener('input', () => update('num', 'amount'));
+
+    els.rate.addEventListener('input', () => update('slider', 'rate'));
+    els.rateNum.addEventListener('input', () => update('num', 'rate'));
+
+    els.months.addEventListener('input', () => update('slider', 'months'));
+    els.monthsNum.addEventListener('input', () => update('num', 'months'));
     
-    calculate();
+    update('num', 'amount');
 </script>
 </body>
 </html>

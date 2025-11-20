@@ -6,7 +6,41 @@
     <title>Calculadora Sou Net</title>
     <link rel="stylesheet" href="../css/styles.css">
     <style>
-        /* Estil específic per als resultats duals (12 vs 14 pagues) */
+        /* ESTILS CLEAN UI (Inputs Invisibles) */
+        .clean-input {
+            background: transparent;
+            border: none;
+            color: inherit;
+            font-family: inherit;
+            font-weight: 700;
+            font-size: 1.2rem; /* Forcem mida idèntica al text */
+            width: 100%;
+            padding: 0;
+            margin: 0;
+            outline: none;
+            cursor: text;
+            transition: color 0.2s;
+            -moz-appearance: textfield;
+        }
+        .clean-input::-webkit-outer-spin-button,
+        .clean-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .clean-input:focus { border-bottom: 2px solid var(--accent); border-radius: 0; }
+
+        .input-display-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 10px;
+        }
+        .currency-wrapper {
+            display: flex;
+            align-items: baseline;
+            font-size: 1.2rem;
+            color: var(--text-primary);
+            font-weight: 700;
+        }
+
+        /* RESULTATS DUALS */
         .salary-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -28,7 +62,7 @@
         .salary-label { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 8px; display: block; }
         .salary-val { font-size: 1.8rem; font-weight: 700; color: var(--text-primary); }
         
-        /* Detalls de nòmina (desglossament) */
+        /* DETALLS */
         .breakdown {
             margin-top: 30px;
             font-size: 0.9rem;
@@ -64,7 +98,6 @@
         </p>
 
         <div class="results-box" style="background: transparent; padding: 0; text-align: left;">
-            
             <div class="salary-grid">
                 <div class="salary-option highlight" id="box-12">
                     <span class="salary-label">En 12 Pagues</span>
@@ -101,35 +134,55 @@
         <hr style="border:0; border-top:1px solid var(--border-light); margin: 40px 0;">
 
         <div class="control-group">
-            <label>Salari Brut Anual: <span id="t-salary">30.000 €</span></label>
+            <div class="input-display-row">
+                <label>Salari Brut Anual</label>
+                <div class="currency-wrapper">
+                    <input type="number" id="in-salary-num" class="clean-input" value="30000" step="500" style="text-align: right; width: 110px;">
+                    <span style="margin-left:4px">€</span>
+                </div>
+            </div>
             <input type="range" id="in-salary" min="12000" max="120000" step="500" value="30000">
         </div>
 
         <div class="control-group">
-            <label>Edat: <span id="t-age">30 anys</span></label>
+            <div class="input-display-row">
+                <label>Edat</label>
+                <div class="currency-wrapper">
+                    <input type="number" id="in-age-num" class="clean-input" value="30" step="1" style="text-align: right; width: 60px;">
+                    <span style="margin-left:4px">anys</span>
+                </div>
+            </div>
             <input type="range" id="in-age" min="18" max="70" step="1" value="30">
         </div>
 
         <div class="control-group">
-            <label>Nombre de Fills (Menors 25): <span id="t-kids">0</span></label>
+            <div class="input-display-row">
+                <label>Fills (menors 25)</label>
+                <div class="currency-wrapper">
+                    <input type="number" id="in-kids-num" class="clean-input" value="0" step="1" min="0" max="10" style="text-align: right; width: 50px;">
+                </div>
+            </div>
             <input type="range" id="in-kids" min="0" max="5" step="1" value="0">
         </div>
         
         <p style="font-size: 0.75rem; color: #b2bec3; text-align: center; margin-top: 30px; line-height: 1.4;">
-            *Nota: Aquesta eina proporciona una estimació propera a la realitat aplicant les taules estatals generals. El resultat final pot variar segons la Comunitat Autònoma o situacions de discapacitat específiques.
+            *Nota: Aquesta eina proporciona una estimació propera a la realitat aplicant les taules estatals generals.
         </p>
     </div>
 
 <script>
     const els = {
+        // Sliders
         salary: document.getElementById('in-salary'),
         age: document.getElementById('in-age'),
         kids: document.getElementById('in-kids'),
-        // Texts
-        tSalary: document.getElementById('t-salary'),
-        tAge: document.getElementById('t-age'),
-        tKids: document.getElementById('t-kids'),
-        // Results
+        
+        // Numeric Inputs
+        salaryNum: document.getElementById('in-salary-num'),
+        ageNum: document.getElementById('in-age-num'),
+        kidsNum: document.getElementById('in-kids-num'),
+
+        // Results Display
         r12: document.getElementById('res-12'),
         r14: document.getElementById('res-14'),
         dGross: document.getElementById('d-gross-month'),
@@ -140,30 +193,24 @@
     };
 
     function calculateTax(gross, kids) {
-        // SIMULACIÓ IRPF 2024/25 (Simplificada per trams estatals)
-        // Això calcula la quota, no la retenció exacta de l'AEAT, però s'hi acosta molt.
-        
-        // 1. Seguretat Social (Treballador)
-        // Base màxima aprox 4720€/mes -> 56640€ anuals
+        // 1. Seguretat Social (Base Màxima 2024 aprox 4720€/mes -> 56640€ anuals)
         let ssBase = gross;
         if (gross > 56640) ssBase = 56640;
-        if (gross < 13230) ssBase = 13230; // SMI aprox
+        if (gross < 13230) ssBase = 13230; 
         
-        let ssTotal = ssBase * 0.0635; // 4.7 + 1.55 + 0.1
+        let ssTotal = ssBase * 0.0635; 
 
-        // 2. Mínim Personal i Familiar (exempt d'IRPF)
+        // 2. Mínims Exempts
         let personalMin = 5550; 
-        // Mínim per descendents
         let kidsMin = 0;
         if (kids >= 1) kidsMin += 2400;
         if (kids >= 2) kidsMin += 2700;
         if (kids >= 3) kidsMin += 4000;
-        if (kids >= 4) kidsMin += 4500; // per quart i següents
+        if (kids >= 4) kidsMin += 4500;
 
         let totalExempt = personalMin + kidsMin;
 
-        // 3. Càlcul Quota IRPF (Progressiva)
-        // Trams aproximats estatals
+        // 3. IRPF Progressiu (Simplificat Estatal)
         const brackets = [
             { limit: 12450, rate: 0.19 },
             { limit: 20200, rate: 0.24 },
@@ -189,18 +236,14 @@
         }
 
         let fullTax = getTaxForAmount(gross);
-        let exemptTax = getTaxForAmount(totalExempt); // El que ens estalviem pel mínim
+        let exemptTax = getTaxForAmount(totalExempt); 
 
         let finalIrpf = fullTax - exemptTax;
         if (finalIrpf < 0) finalIrpf = 0;
 
-        // Ajust per rendes baixes (Reducció art 20 IRPF - simplificat)
-        if (gross < 22000) {
-            finalIrpf = finalIrpf * 0.85; // Reducció sintètica per apropar-se a la realitat de les retencions baixes
-        }
-        if (gross < 15876) { // Mínim exempt efectiu aprox
-            finalIrpf = 0;
-        }
+        // Ajust rendes baixes
+        if (gross < 22000) finalIrpf = finalIrpf * 0.85; 
+        if (gross < 15876) finalIrpf = 0;
 
         return {
             ss: ssTotal,
@@ -209,41 +252,63 @@
         };
     }
 
-    function update() {
-        let gross = parseFloat(els.salary.value);
-        let age = parseFloat(els.age.value);
-        let kids = parseFloat(els.kids.value);
+    function update(source, type) {
+        // Sincronització Bidireccional
+        let val;
 
-        // Update UI Labels
-        els.tSalary.textContent = gross.toLocaleString('ca-ES') + " €";
-        els.tAge.textContent = age + " anys";
-        els.tKids.textContent = kids;
+        if (type === 'salary') {
+            val = parseFloat(source === 'slider' ? els.salary.value : els.salaryNum.value);
+            if (isNaN(val)) val = 0;
+            els.salary.value = val;
+            els.salaryNum.value = val;
+        }
+        if (type === 'age') {
+            val = parseFloat(source === 'slider' ? els.age.value : els.ageNum.value);
+            if (isNaN(val)) val = 0;
+            els.age.value = val;
+            els.ageNum.value = val;
+        }
+        if (type === 'kids') {
+            val = parseFloat(source === 'slider' ? els.kids.value : els.kidsNum.value);
+            if (isNaN(val)) val = 0;
+            els.kids.value = val;
+            els.kidsNum.value = val;
+        }
 
-        // Calculate
+        // Obtenir valors finals
+        let gross = parseFloat(els.salaryNum.value);
+        let kids = parseFloat(els.kidsNum.value);
+
         let result = calculateTax(gross, kids);
-
         let netAnnual = result.net;
-        let netMonth12 = netAnnual / 12;
-        let netMonth14 = netAnnual / 14;
+        
+        // Display Logic
+        let irpfPercent = (gross > 0) ? (result.irpf / gross) * 100 : 0;
 
-        let irpfPercent = (result.irpf / gross) * 100;
+        els.r12.textContent = Math.floor(netAnnual / 12).toLocaleString('ca-ES') + " €";
+        els.r14.textContent = Math.floor(netAnnual / 14).toLocaleString('ca-ES') + " €";
 
-        // Display Results
-        els.r12.textContent = Math.floor(netMonth12).toLocaleString('ca-ES') + " €";
-        els.r14.textContent = Math.floor(netMonth14).toLocaleString('ca-ES') + " €";
-
-        // Breakdown (basat en 12 pagues per claredat)
         els.dGross.textContent = (gross / 12).toFixed(0).toLocaleString('ca-ES') + " €";
         els.dIrpfRate.textContent = irpfPercent.toFixed(1) + "%";
         els.dIrpfVal.textContent = "-" + (result.irpf / 12).toFixed(0).toLocaleString('ca-ES') + " €";
         els.dSsVal.textContent = "-" + (result.ss / 12).toFixed(0).toLocaleString('ca-ES') + " €";
-        els.dNetTotal.textContent = Math.floor(netMonth12).toLocaleString('ca-ES') + " €";
+        els.dNetTotal.textContent = Math.floor(netAnnual / 12).toLocaleString('ca-ES') + " €";
     }
 
     // Listeners
-    [els.salary, els.age, els.kids].forEach(e => e.addEventListener('input', update));
+    // Salari
+    els.salary.addEventListener('input', () => update('slider', 'salary'));
+    els.salaryNum.addEventListener('input', () => update('num', 'salary'));
     
-    update();
+    // Edat
+    els.age.addEventListener('input', () => update('slider', 'age'));
+    els.ageNum.addEventListener('input', () => update('num', 'age'));
+
+    // Fills
+    els.kids.addEventListener('input', () => update('slider', 'kids'));
+    els.kidsNum.addEventListener('input', () => update('num', 'kids'));
+    
+    update('num', 'salary'); // Init
 </script>
 </body>
 </html>
