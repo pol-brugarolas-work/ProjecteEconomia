@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://pol-brugarolas-work.github.io/ProjecteEconomia/sitemap.xml

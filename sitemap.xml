@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+   <url>
+      <loc>https://pol-brugarolas-work.github.io/ProjecteEconomia/</loc>
+      <lastmod>2025-11-20</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>1.0</priority>
+   </url>
+
+   <url>
+      <loc>https://pol-brugarolas-work.github.io/ProjecteEconomia/tools/sou_net.html</loc>
+      <changefreq>monthly</changefreq>
+      <priority>0.9</priority>
+   </url>
+   <url>
+      <loc>https://pol-brugarolas-work.github.io/ProjecteEconomia/tools/hipoteca.html</loc>
+      <changefreq>monthly</changefreq>
+      <priority>0.9</priority>
+   </url>
+   <url>
+      <loc>https://pol-brugarolas-work.github.io/ProjecteEconomia/tools/prestec_personal.html</loc>
+      <changefreq>monthly</changefreq>
+      <priority>0.8</priority>
+   </url>
+   <url>
+      <loc>https://pol-brugarolas-work.github.io/ProjecteEconomia/tools/lloguer_vs_compra.html</loc>
+      <changefreq>monthly</changefreq>
+      <priority>0.8</priority>
+   </url>
+
+   <url>
+      <loc>https://pol-brugarolas-work.github.io/ProjecteEconomia/tools/interes_compost.html</loc>
+      <changefreq>monthly</changefreq>
+      <priority>0.7</priority>
+   </url>
+   <url>
+      <loc>https://pol-brugarolas-work.github.io/ProjecteEconomia/tools/fons_emergencia.html</loc>
+      <changefreq>monthly</changefreq>
+      <priority>0.7</priority>
+   </url>
+   <url>
+      <loc>https://pol-brugarolas-work.github.io/ProjecteEconomia/tools/inflacio.html</loc>
+      <changefreq>monthly</changefreq>
+      <priority>0.6</priority>
+   </url>
+   <url>
+      <loc>https://pol-brugarolas-work.github.io/ProjecteEconomia/tools/llibertat_financera.html</loc>
+      <changefreq>monthly</changefreq>
+      <priority>0.6</priority>
+   </url>
+</urlset>
