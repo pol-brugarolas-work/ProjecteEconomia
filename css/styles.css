@@ -2,7 +2,7 @@
     /* Paleta de colors "Apple-esque" */
     --bg-body: #f5f5f7; /* El gris molt suau de fons d'Apple */
     --bg-card: #ffffff;
-    --text-primary: #1d1d1f; /* Negre Apple (no és negre pur) */
+    --text-primary: #1d1d1f; /* Negre Apple */
     --text-secondary: #86868b;
     --accent: #0071e3; /* Blau Apple */
     --border-light: rgba(0,0,0,0.04);
@@ -96,32 +96,18 @@ body {
 }
 
 /* =========================================
-   GRID RESPONSIVE (4 Columnes)
+   GRID RESPONSIVE (ARREGLAT)
    ========================================= */
-
 .dashboard-grid {
     display: grid;
-    gap: 40px; /* Separació generosa entre targetes */
+    /* Creem columnes automàtiques però amb una mida mínima sana */
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 30px; /* Espai entre targetes */
     padding: 20px 40px 80px;
-    max-width: 1300px;
+    max-width: 1300px; /* Màxim ample per evitar que s'escampin massa */
     margin: 0 auto;
-    /* Per defecte (Mòbils): 1 columna */
-    grid-template-columns: 1fr;
-    align-items: stretch; /* Igualar alçada */
-}
-
-/* TAULETES: 2 Columnes */
-@media (min-width: 600px) {
-    .dashboard-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-/* ORDINADORS: 4 Columnes EXACTES */
-@media (min-width: 1100px) {
-    .dashboard-grid {
-        grid-template-columns: repeat(4, 1fr);
-    }
+    /* Alineació vertical */
+    align-items: start; /* IMPORTANT: Evita que s'estirin verticalment com xiclets */
 }
 
 /* =========================================
@@ -137,16 +123,17 @@ body {
     box-shadow: var(--shadow-sm);
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     
-    /* Estructura interna flexible */
+    /* Flexbox per organitzar contingut verticalment */
     display: flex;
     flex-direction: column;
-    justify-content: flex-start;
-    align-items: flex-start;
-    text-align: left;
+    align-items: flex-start; /* Alineat a l'esquerra */
+    justify-content: flex-start; /* Contingut a dalt */
     
-    height: 100%; /* Ocupar tota l'alçada de la fila */
-    min-height: 220px;
+    /* Mides */
+    height: 100%; /* Ocupa l'alçada disponible de la fila */
+    min-height: 200px; /* Alçada mínima raonable, no gegant */
     position: relative;
+    box-sizing: border-box;
 }
 
 .tool-card:hover {
@@ -154,18 +141,17 @@ body {
     box-shadow: var(--shadow-hover);
 }
 
-/* Aquesta part empeny el text si cal */
+/* Contenidor de text que ocupa l'espai restant */
 .tool-card > div {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
+    width: 100%;
 }
 
-/* CORRECCIÓ ICONES: Fixes i Quadrades */
+/* CORRECCIÓ ICONES: Mides fixes i quadrades */
 .tool-icon { 
-    width: 60px;
-    height: 60px;
-    min-height: 60px; /* Imprescindible per no xafar-se */
+    width: 56px !important;      /* Forcem amplada */
+    height: 56px !important;     /* Forcem alçada */
+    min-height: 56px !important; /* Assegurança */
+    max-height: 56px !important; /* Assegurança */
     font-size: 2em;
     margin-bottom: 20px;
     background: #f5f5f7;
@@ -173,20 +159,21 @@ body {
     align-items: center;
     justify-content: center;
     border-radius: 14px;
-    flex-shrink: 0; /* Prohibir que s'encongeixi */
+    flex-shrink: 0; /* PROHIBIT ENCONGIR-SE O ESTIRAR-SE */
 }
 
 .tool-title { 
     font-size: 1.1rem; 
     font-weight: 600; 
-    margin: 0 0 6px 0;
+    margin: 0 0 8px 0;
     color: var(--text-primary);
+    line-height: 1.3;
 }
 
 .tool-desc { 
-    font-size: 0.85rem; 
+    font-size: 0.9rem; 
     color: var(--text-secondary);
-    line-height: 1.4;
+    line-height: 1.5;
     margin: 0;
 }
 
@@ -216,7 +203,7 @@ footer a { color: var(--text-secondary); text-decoration: none; }
 
 
 /* =========================================
-   MODE FOSC CORRECTE (V3 - Llegibilitat Total)
+   MODE FOSC CORRECTE (V3 DEFINITIU)
    ========================================= */
 @media (prefers-color-scheme: dark) {
     :root {
@@ -240,14 +227,14 @@ footer a { color: var(--text-secondary); text-decoration: none; }
         color: var(--text-primary);
     }
 
-    /* 2. ICONES */
+    /* 2. ICONES (Fons gris fosc, no blanc) */
     .tool-icon {
         background-color: #2c2c2e !important;
         color: #fff;
         border: 1px solid #3a3a3c;
     }
 
-    /* 3. BUSCADOR (Solució Text Invisible) */
+    /* 3. BUSCADOR */
     .search-input {
         background-color: #2c2c2e !important;
         color: #ffffff !important;
@@ -260,8 +247,7 @@ footer a { color: var(--text-secondary); text-decoration: none; }
         outline: none;
     }
 
-    /* 4. CAIXES INTERNES (HIPOTECA, SOU, PRÉSTEC) */
-    /* Tot el que sigui una caixa blanca, ara serà gris fosc */
+    /* 4. CAIXES INTERNES */
     .summary-item, 
     .salary-option, 
     .receipt-box, 
@@ -272,29 +258,25 @@ footer a { color: var(--text-secondary); text-decoration: none; }
         color: #fff !important;
     }
 
-    /* Sub-textos grisos dins les caixes */
     .summary-label, 
     .salary-label, 
     .receipt-row span {
         color: #a1a1a6 !important;
     }
     
-    /* Valors finals blancs */
     .summary-val, 
     .salary-val, 
-    .receipt-row.final,
+    .receipt-row.final, 
     .receipt-row span:last-child {
         color: #ffffff !important;
     }
 
-    /* Selecció activa (Blava) */
     .salary-option.highlight {
         background-color: rgba(10, 132, 255, 0.2) !important;
         border-color: var(--accent) !important;
     }
 
-    /* 5. CAIXES DE COLORS (LLOGUER VS COMPRA) */
-    /* Fons translúcids en lloc de pastels sòlids */
+    /* 5. CAIXES DE COLORS (Transparències) */
     .box-rent {
         background-color: rgba(33, 150, 243, 0.15) !important;
         border: 1px solid #2196f3 !important;
@@ -308,13 +290,10 @@ footer a { color: var(--text-secondary); text-decoration: none; }
     .net-worth-label { color: #ddd !important; }
     .net-worth-val { color: #fff !important; }
 
-    /* 6. INPUTS I TEXTOS GENERALS */
+    /* 6. TEXTOS I ALTRES */
     input[type=range] { background: #3a3a3c; }
-    
     h1, h2, h3, label { color: #fff !important; }
     p, .tool-desc, .sub-title { color: #a1a1a6 !important; }
-    
     .big-number { color: #fff !important; }
-    /* Manté els colors (vermell/verd) si n'hi ha, però els il·lumina */
     .big-number[style*="color"] { filter: brightness(1.3); } 
 }
