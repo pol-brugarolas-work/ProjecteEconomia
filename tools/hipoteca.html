@@ -33,8 +33,41 @@
             overflow: hidden;
             display: flex;
         }
-        .seg-loan { background-color: #3498db; height: 100%; } /* El préstec */
-        .seg-interest { background-color: #e74c3c; height: 100%; } /* Els interessos "cremats" */
+        .seg-loan { background-color: #3498db; height: 100%; transition: width 0.3s ease; }
+        .seg-interest { background-color: #e74c3c; height: 100%; transition: width 0.3s ease; }
+
+        /* Inputs numèrics personalitzats */
+        .input-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .input-wrapper {
+            position: relative;
+            flex: 1;
+        }
+        .input-wrapper input {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            box-sizing: border-box; /* Important per al padding */
+        }
+        .input-wrapper span {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #888;
+            font-size: 0.9em;
+            pointer-events: none;
+        }
+        /* Estil per a alertes */
+        .warning-text {
+            color: #e74c3c !important;
+            border-color: #e74c3c !important;
+        }
     </style>
 </head>
 <body>
@@ -47,17 +80,36 @@
         <h2>Simulador d'Hipoteca</h2>
         
         <div class="control-group">
-            <label>Preu de l'Habitatge: <span id="d-price">200.000 €</span></label>
+            <label>Preu de l'Habitatge</label>
+            <div class="input-wrapper" style="margin-bottom: 10px;">
+                <input type="number" id="in-price-num" value="200000" step="1000">
+                <span>€</span>
+            </div>
             <input type="range" id="in-price" min="50000" max="800000" step="1000" value="200000">
         </div>
 
         <div class="control-group">
-            <label>Entrada Inicial (Estalvis): <span id="d-down">40.000 €</span></label>
+            <label>Entrada Inicial (Estalvis)</label>
+            <div class="input-row">
+                <div class="input-wrapper" style="flex: 2;">
+                    <input type="number" id="in-down-num" value="40000" step="100">
+                    <span>€</span>
+                </div>
+                <div class="input-wrapper" style="flex: 1;">
+                    <input type="number" id="in-down-percent" value="20" step="0.1" max="100">
+                    <span>%</span>
+                </div>
+            </div>
             <input type="range" id="in-down" min="0" max="200000" step="1000" value="40000">
+            <small id="ltv-warning" style="color: #e67e22; font-size: 0.8em; display: none; margin-top: 5px;">⚠️ Menys del 20%: És difícil que el banc ho aprovi.</small>
         </div>
 
         <div class="control-group">
-            <label>Interès Anual (%): <span id="d-rate">3.5%</span></label>
+            <label>Interès Anual (%)</label>
+            <div class="input-wrapper" style="margin-bottom: 10px; width: 100px;">
+                <input type="number" id="in-rate-num" value="3.5" step="0.1">
+                <span>%</span>
+            </div>
             <input type="range" id="in-rate" min="0.1" max="10" step="0.1" value="3.5">
         </div>
 
@@ -95,50 +147,140 @@
 
 <script>
     const els = {
+        // Inputs Sliders
         price: document.getElementById('in-price'),
         down: document.getElementById('in-down'),
         rate: document.getElementById('in-rate'),
         years: document.getElementById('in-years'),
-        // Displays
-        dp: document.getElementById('d-price'),
-        dd: document.getElementById('d-down'),
-        dr: document.getElementById('d-rate'),
-        dy: document.getElementById('d-years'),
-        // Results
+        
+        // Inputs Numèrics (Nous)
+        priceNum: document.getElementById('in-price-num'),
+        downNum: document.getElementById('in-down-num'),
+        downPercent: document.getElementById('in-down-percent'),
+        rateNum: document.getElementById('in-rate-num'),
+        
+        // Altres elements
+        ltvWarning: document.getElementById('ltv-warning'),
+        dy: document.getElementById('d-years'), // Text durada
+        
+        // Resultats
         dm: document.getElementById('d-monthly'),
         dl: document.getElementById('d-loan'),
         dti: document.getElementById('d-total-interest'),
-        // Bars
         bl: document.getElementById('bar-loan'),
         bi: document.getElementById('bar-interest')
     };
 
-    function calculate() {
-        // 1. Valors
-        let price = parseFloat(els.price.value);
-        let down = parseFloat(els.down.value);
-        
-        // Lògica de seguretat: L'entrada no pot ser major que el preu
-        if (down > price) {
-            down = price; 
-            // Opcional: ajustar el slider visualment, però per simplicitat només ajustem el càlcul
-        }
+    // --- FUNCIONS DE SINCRONITZACIÓ ---
 
-        let loan = price - down; // El que demanes al banc
-        let annualRate = parseFloat(els.rate.value);
+    // 1. Quan canvia el Preu (Slider o Num)
+    function updatePrice(source) {
+        let val = parseFloat(source === 'slider' ? els.price.value : els.priceNum.value);
+        if(isNaN(val)) val = 0;
+
+        // Sincronitzem l'altre input
+        if(source === 'slider') els.priceNum.value = val;
+        else els.price.value = val;
+
+        // Actualitzem el màxim de l'entrada (no pots donar més entrada que el preu)
+        els.down.max = val;
+        
+        // Recalculem el % d'entrada basat en els € actuals (mantenim € fixos si es pot)
+        // Si els € d'entrada superen el nou preu, els baixem
+        let currentDown = parseFloat(els.downNum.value);
+        if(currentDown > val) {
+            currentDown = val;
+            els.downNum.value = currentDown;
+            els.down.value = currentDown;
+        }
+        updateDownPercentFromEuro(); // Actualitzem el % visualment
+        calculate();
+    }
+
+    // 2. Quan canvia l'Entrada en Euros (Slider o Num)
+    function updateDownEuro(source) {
+        let val = parseFloat(source === 'slider' ? els.down.value : els.downNum.value);
+        let maxPrice = parseFloat(els.priceNum.value);
+
+        if(isNaN(val)) val = 0;
+        if(val > maxPrice) val = maxPrice; // Protecció
+
+        // Sincronitzem
+        if(source === 'slider') els.downNum.value = val;
+        else els.down.value = val;
+
+        updateDownPercentFromEuro(); // Calculem quan és això en %
+        calculate();
+    }
+
+    // 3. Quan canvia l'Entrada en Percentatge (Num)
+    function updateDownPercent() {
+        let pct = parseFloat(els.downPercent.value);
+        let price = parseFloat(els.priceNum.value);
+
+        if(isNaN(pct)) pct = 0;
+        if(pct > 100) pct = 100;
+
+        // Calculem quants euros són
+        let euros = (pct / 100) * price;
+        
+        // Actualitzem inputs d'Euros i Slider
+        els.downNum.value = euros.toFixed(0);
+        els.down.value = euros.toFixed(0);
+
+        calculate();
+    }
+
+    // Helper: Calcula el % basat en els inputs d'Euros actuals
+    function updateDownPercentFromEuro() {
+        let price = parseFloat(els.priceNum.value);
+        let down = parseFloat(els.downNum.value);
+        
+        if(price > 0) {
+            let pct = (down / price) * 100;
+            els.downPercent.value = pct.toFixed(2); // Màxim 2 decimals
+            
+            // Validació visual LTV (Loan to Value)
+            // Si el % és menor al 20%, mostrem avís o canviem color
+            if(pct < 20) {
+                els.downPercent.style.color = "#e74c3c"; // Vermell
+                els.ltvWarning.style.display = "block";
+            } else {
+                els.downPercent.style.color = "inherit";
+                els.ltvWarning.style.display = "none";
+            }
+        } else {
+            els.downPercent.value = 0;
+        }
+    }
+
+    // 4. Quan canvia l'Interès
+    function updateRate(source) {
+        let val = parseFloat(source === 'slider' ? els.rate.value : els.rateNum.value);
+        if(isNaN(val)) val = 0;
+
+        if(source === 'slider') els.rateNum.value = val;
+        else els.rate.value = val;
+
+        calculate();
+    }
+
+    // --- CÀLCUL PRINCIPAL ---
+    function calculate() {
+        let price = parseFloat(els.priceNum.value);
+        let down = parseFloat(els.downNum.value);
+        let annualRate = parseFloat(els.rateNum.value);
         let years = parseFloat(els.years.value);
 
-        // Actualitzar textos Inputs
-        els.dp.textContent = price.toLocaleString('ca-ES') + " €";
-        els.dd.textContent = down.toLocaleString('ca-ES') + " €";
-        els.dr.textContent = annualRate.toFixed(1) + "%";
+        // Actualitzar text display
         els.dy.textContent = years + " Anys";
 
-        // 2. Càlcul Hipoteca (Mètode Francès)
-        // M = P * [ r(1+r)^n ] / [ (1+r)^n – 1 ]
+        let loan = price - down; 
+        if (loan < 0) loan = 0;
+
+        // Mètode Francès
         let monthlyRate = (annualRate / 100) / 12;
         let totalMonths = years * 12;
-        
         let monthlyPayment = 0;
 
         if (loan <= 0) {
@@ -151,13 +293,14 @@
 
         let totalPaid = monthlyPayment * totalMonths;
         let totalInterest = totalPaid - loan;
+        if(totalInterest < 0) totalInterest = 0;
 
-        // 3. Resultats a pantalla
+        // Resultats a pantalla
         els.dm.textContent = Math.floor(monthlyPayment).toLocaleString('ca-ES') + " €/mes";
         els.dl.textContent = loan.toLocaleString('ca-ES') + " €";
         els.dti.textContent = Math.floor(totalInterest).toLocaleString('ca-ES') + " €";
 
-        // 4. Barres visuals (Cost Total = Préstec + Interessos)
+        // Barres visuals
         let totalCost = loan + totalInterest;
         if (totalCost <= 0) totalCost = 1;
 
@@ -168,10 +311,26 @@
         els.bi.style.width = interestPercent + "%";
     }
 
-    // Listeners
-    [els.price, els.down, els.rate, els.years].forEach(e => e.addEventListener('input', calculate));
+    // LISTENERS (Escoltem els esdeveniments)
     
-    calculate();
+    // Preu
+    els.price.addEventListener('input', () => updatePrice('slider'));
+    els.priceNum.addEventListener('input', () => updatePrice('num'));
+
+    // Entrada
+    els.down.addEventListener('input', () => updateDownEuro('slider'));
+    els.downNum.addEventListener('input', () => updateDownEuro('num'));
+    els.downPercent.addEventListener('input', updateDownPercent); // El nou input %
+
+    // Interès
+    els.rate.addEventListener('input', () => updateRate('slider'));
+    els.rateNum.addEventListener('input', () => updateRate('num'));
+
+    // Anys (només slider de moment)
+    els.years.addEventListener('input', calculate);
+
+    // Inicialització
+    updatePrice('num'); // Per alinear-ho tot d'entrada
 </script>
 </body>
 </html>
