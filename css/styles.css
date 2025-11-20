@@ -62,8 +62,8 @@ body {
    BUSCADOR (Future-Proof)
    ========================================= */
 .search-wrapper {
-    margin: 30px auto 10px;
-    max-width: 400px;
+    margin: 40px auto 60px; /* Més espai per sota (60px) abans de les eines */
+    max-width: 500px; /* Una mica més ample per llegir millor */
     position: relative;
 }
 
@@ -96,17 +96,32 @@ body {
 }
 
 /* =========================================
-   GRID "BENTO" (Compacta i Eficient)
+   GRID RESPONSIVE (Control Manual UI/UX)
    ========================================= */
-/* MODIFICACIÓ GRID: Més ample per cabre 4 columnes */
+
 .dashboard-grid {
     display: grid;
-    /* Això permet 4 columnes en pantalles grans (mínim 220px per targeta) */
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 30px; /* Espai entre targetes */
-    padding: 20px 40px 60px;
-    max-width: 1400px; /* Ampliem l'ample màxim (abans era 1000px) */
+    gap: 30px; /* Espai generós entre targetes per separar-les bé */
+    padding: 20px 40px 80px;
+    max-width: 1280px; /* Limitem l'amplada total perquè no s'estirin massa */
     margin: 0 auto;
+    
+    /* Per defecte (Mòbils): 1 columna */
+    grid-template-columns: 1fr;
+}
+
+/* TAULETES (Pantalles mitjanes > 600px): 2 Columnes */
+@media (min-width: 600px) {
+    .dashboard-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* ORDINADORS (Pantalles grans > 1100px): 4 Columnes EXACTES */
+@media (min-width: 1100px) {
+    .dashboard-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
 }
 
 .tool-card {
@@ -127,6 +142,19 @@ body {
     background: #ffffff; /* Assegurem blanc pur */
     box-shadow: 0 4px 12px rgba(0,0,0,0.05); /* Ombra més definida, menys difusa */
     border: 1px solid rgba(0,0,0,0.08); /* Vora subtil per delimitar */
+    /* AFEGEIX O ASSEGURA AIXÒ PER L'ALINEACIÓ: */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; /* Contingut a dalt */
+    height: 100%; /* Força que totes les targetes de la fila tinguin la mateixa alçada */
+    min-height: 220px; /* Alçada mínima per uniformitat visual */
+}
+
+/* Això empeny el text cap avall si cal, o manté l'icona al seu lloc */
+.tool-card > div {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .tool-card:hover {
